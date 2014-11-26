@@ -4,6 +4,7 @@ from __future__ import absolute_import, with_statement
 import re
 import sys
 import six
+import os
 from behave import model, i18n
 from behave.textutil import text as _text
 
@@ -12,10 +13,13 @@ DEFAULT_LANGUAGE = "en"
 
 
 def parse_file(filename, language=None):
+    return parse_feature(read_file(filename), language, filename)
+
+
+def read_file(filename):
     with open(filename, "rb") as f:
         # file encoding is assumed to be utf8. Oh, yes.
-        data = f.read().decode("utf8")
-    return parse_feature(data, language, filename)
+        return f.read().decode("utf8")
 
 
 def parse_feature(data, language=None, filename=None):
@@ -155,12 +159,34 @@ class Parser(object):
 
         self.filename = filename
 
-        for line in data.split("\n"):
-            self.line += 1
-            if not line.strip() and self.state != "multiline":
-                # -- SKIP EMPTY LINES, except in multiline string args.
-                continue
-            self.action(line)
+        def lines(data):
+
+            for line in data.split("\n"):
+                self.line += 1
+                if not line.strip() and self.state != "multiline":
+                    # -- SKIP EMPTY LINES, except in multiline string args.
+                    continue
+
+                if line.strip().startswith("@import "):
+                    filename = line.strip()[8:]
+                    filename = os.path.join(os.path.dirname(self.filename), filename)
+
+                    if not os.path.exists(filename):
+                        raise ParserError("Partial %s not found" % filename, self.line)
+
+                    orig_line = self.line
+                    orig_file = self.filename
+
+                    self.line = 0
+                    self.filename = filename
+                    lines(read_file(filename))
+
+                    self.line = orig_line
+                    self.filename = orig_file
+                else:
+                    self.action(line)
+
+        lines(data)
 
         if self.table:
             self.action_table("")
@@ -348,7 +374,7 @@ class Parser(object):
         * ScenarioOutline
         * Examples (within ScenarioOutline)
         """
-        if line.startswith("@"):
+        if line.startswith("@") and not line.startswith('@import '):
             self.tags.extend(self.parse_tags(line))
             self.state = "taggable_statement"
             return True
