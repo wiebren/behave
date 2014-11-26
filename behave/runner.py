@@ -368,6 +368,13 @@ class Context(object):
                 return True
         return False
 
+    def items(self):
+        items = {}
+        for frame in reversed(self._stack):
+            items.update(frame)
+
+        return items.items()
+
     def execute_steps(self, steps_text):
         """The steps identified in the "steps" text string will be parsed and
         executed in turn just as though they were defined in a feature file.

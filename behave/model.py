@@ -1297,6 +1297,11 @@ class Step(BasicStatement, Replayable):
         # self.hook_failed = False
         self.reset()
 
+        for name, value in runner.context.items():
+            self.name = self.name.replace("<%%%s%%>" % name, unicode(value))
+            if self.text:
+                self.text = self.text.replace("<%%%s%%>" % name, unicode(value))
+
         match = runner.step_registry.find_match(self)
         if match is None:
             runner.undefined_steps.append(self)
