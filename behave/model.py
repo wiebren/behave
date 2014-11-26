@@ -1369,6 +1369,11 @@ class Step(BasicStatement, Replayable):
         self.exception = self.exc_traceback = self.error_message = None
         self.status = 'untested'
 
+        for name, value in runner.context.items():
+            self.name = self.name.replace("<%%%s%%>" % name, unicode(value))
+            if self.text:
+                self.text = self.text.replace("<%%%s%%>" % name, unicode(value))
+
         # access module var here to allow test mocking to work
         match = step_registry.registry.find_match(self)
         if match is None:
