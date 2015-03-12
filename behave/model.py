@@ -1370,9 +1370,9 @@ class Step(BasicStatement, Replayable):
         self.status = 'untested'
 
         for name, value in runner.context.items():
-            self.name = self.name.replace("<%%%s%%>" % name, unicode(value))
+            self.name = self.name.replace("<%%%s%%>" % name, unicode(str(value), 'utf-8'))
             if self.text:
-                self.text = self.text.replace("<%%%s%%>" % name, unicode(value))
+                self.text = self.text.replace("<%%%s%%>" % name, unicode(str(value), 'utf-8'))
 
         # access module var here to allow test mocking to work
         match = step_registry.registry.find_match(self)
