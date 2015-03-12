@@ -1281,9 +1281,9 @@ class Step(BasicStatement, Replayable):
 
 
         for name, value in runner.context.items():
-            self.name = self.name.replace("<%%%s%%>" % name, unicode(value))
+            self.name = self.name.replace("<%%%s%%>" % name, unicode(str(value), 'utf-8'))
             if self.text:
-                self.text = self.text.replace("<%%%s%%>" % name, unicode(value))
+                self.text = self.text.replace("<%%%s%%>" % name, unicode(str(value), 'utf-8'))
 
         match = runner.step_registry.find_match(self)
         if match is None:
