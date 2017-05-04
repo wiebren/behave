@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, print_function
+import codecs
+import sys
+import six
 from behave import __version__
 from behave.configuration import Configuration, ConfigError
 from behave.parser import ParserError
 from behave.runner import Runner
-from behave.runner_util import print_undefined_step_snippets, \
+from behave.runner_util import print_undefined_step_snippets, reset_runtime, \
     InvalidFileLocationError, InvalidFilenameError, FileNotFoundError
-from behave.textutil import text as _text
-import codecs
-import six
-import sys
+from behave.textutil import compute_words_maxsize, text as _text
 
 
 TAG_HELP = """
@@ -51,8 +51,19 @@ you have to use logical AND::
 # """.strip()
 
 
-def main(args=None):
-    config = Configuration(args)
+def run_behave(config, runner_class=None):
+    """Run behave with configuration.
+
+    :param config:          Configuration object for behave.
+    :param runner_class:    Runner class to use or none (use Runner class).
+    :return:    0, if successful. Non-zero on failure.
+
+    .. note:: BEST EFFORT, not intended for multi-threaded usage.
+    """
+    # pylint: disable=too-many-branches, too-many-statements, too-many-return-statements
+    if runner_class is None:
+        runner_class = Runner
+
     if config.version:
         print("behave " + __version__)
         return 0
@@ -72,48 +83,50 @@ def main(args=None):
         for iso_code in sorted(iso_codes):
             native = languages[iso_code]["native"][0]
             name = languages[iso_code]["name"][0]
-            print(u'%s: %s / %s' % (iso_code, native, name), file=stdout)
+            print(u"%s: %s / %s" % (iso_code, native, name), file=stdout)
         return 0
 
     if config.lang_help:
         from behave.i18n import languages
         if config.lang_help not in languages:
-            print('%s is not a recognised language: try --lang-list' % \
+            print("%s is not a recognised language: try --lang-list" % \
                     config.lang_help)
             return 1
         trans = languages[config.lang_help]
-        print(u"Translations for %s / %s" % (trans['name'][0],
-                                             trans['native'][0]))
+        print(u"Translations for %s / %s" % (trans["name"][0],
+                                             trans["native"][0]))
         for kw in trans:
-            if kw in 'name native'.split():
+            if kw in "name native".split():
                 continue
-            print(u'%16s: %s' % (kw.title().replace('_', ' '),
-                  u', '.join(w for w in trans[kw] if w != '*')))
+            print(u"%16s: %s" % (kw.title().replace("_", " "),
+                                 u", ".join(w for w in trans[kw] if w != "*")))
         return 0
 
     if not config.format:
-        config.format = [ config.default_format ]
+        config.format = [config.default_format]
     elif config.format and "format" in config.defaults:
         # -- CASE: Formatter are specified in behave configuration file.
         #    Check if formatter are provided on command-line, too.
         if len(config.format) == len(config.defaults["format"]):
             # -- NO FORMATTER on command-line: Add default formatter.
             config.format.append(config.default_format)
-    if 'help' in config.format:
+    if "help" in config.format:
         print_formatters("Available formatters:")
         return 0
 
     if len(config.outputs) > len(config.format):
-        print('CONFIG-ERROR: More outfiles (%d) than formatters (%d).' % \
+        print("CONFIG-ERROR: More outfiles (%d) than formatters (%d)." % \
               (len(config.outputs), len(config.format)))
         return 1
 
+    # -- MAIN PART:
     failed = True
-    runner = Runner(config)
     try:
+        reset_runtime()
+        runner = runner_class(config)
         failed = runner.run()
     except ParserError as e:
-        print(u"ParseError: %s" % e)
+        print(u"ParserError: %s" % e)
     except ConfigError as e:
         print(u"ConfigError: %s" % e)
     except FileNotFoundError as e:
@@ -138,14 +151,12 @@ def main(args=None):
     return return_code
 
 def print_formatters(title=None, stream=None):
-    """
-    Prints the list of available formatters and their description.
+    """Prints the list of available formatters and their description.
 
     :param title:   Optional title (as string).
     :param stream:  Optional, output stream to use (default: sys.stdout).
     """
     from behave.formatter._registry  import format_items
-    from behave.textutil import compute_words_maxsize, text as _text
     from operator import itemgetter
 
     if stream is None:
@@ -162,6 +173,15 @@ def print_formatters(title=None, stream=None):
         stream.write(schema % (name, formatter_description))
 
 
-if __name__ == '__main__':
+def main(args=None):
+    """Main function to run behave (as program).
+
+    :param args:    Command-line args (or string) to use.
+    :return: 0, if successful. Non-zero, in case of errors/failures.
+    """
+    config = Configuration(args)
+    return run_behave(config)
+
+if __name__ == "__main__":
     # -- EXAMPLE: main("--version")
     sys.exit(main())

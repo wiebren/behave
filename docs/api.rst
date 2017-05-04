@@ -30,13 +30,13 @@ directory will be imported to find step implementations. They are all
 loaded before *behave* starts executing your feature tests.
 
 Step functions are identified using step decorators. All step
-implementations **must** start with the import line:
+implementations **should normally** start with the import line:
 
 .. code-block:: python
 
    from behave import *
 
-This imports several decorators defined by *behave* to allow you to
+This line imports several decorators defined by *behave* to allow you to
 identify your step functions. These are available in both PEP-8 (all
 lowercase) and traditional (title case) versions: "given", "when", "then"
 and the generic "step". See the `full list of variables imported`_ in the
@@ -64,7 +64,7 @@ will match the "Given" step from the following feature:
    then some observed outcome.
 
 *You don't need to import the decorators*: they're automatically available
-to your step implmentation modules as `global variables`_.
+to your step implementation modules as `global variables`_.
 
 .. _`global variables`: #step-global-variables
 
@@ -136,9 +136,9 @@ name" to :class:`~behave.matchers.Matcher` class.
 .. autoclass:: behave.matchers.Matcher
    :members:
 
-.. autoclass:: behave.model.Argument
+.. autoclass:: behave.model_core.Argument
 
-.. autoclass:: behave.model.Match
+.. autoclass:: behave.matchers.Match
 
 
 Calling Steps From Other Steps
@@ -154,7 +154,7 @@ This function allows you to, for example:
 
     @when('I do the same thing as before')
     def step_impl(context):
-        context.execute_steps('''
+        context.execute_steps(u'''
             when I press the big red button
              and I duck
         ''')

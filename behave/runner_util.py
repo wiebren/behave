@@ -4,16 +4,16 @@ Contains utility functions and classes for Runners.
 """
 
 from __future__ import absolute_import
-from behave import parser
-from behave.model import FileLocation
 from bisect import bisect
-from six import string_types
-import codecs
 import glob
 import os.path
 import re
-import six
 import sys
+
+from six import string_types
+from behave import parser
+from behave.model_core import FileLocation
+
 
 
 # -----------------------------------------------------------------------------
@@ -34,9 +34,7 @@ class InvalidFilenameError(ValueError):
 # -----------------------------------------------------------------------------
 # CLASS: FileLocationParser
 # -----------------------------------------------------------------------------
-class FileLocationParser:
-    # -- pylint: disable=W0232
-    # W0232: 84,0:FileLocationParser: Class has no __init__ method
+class FileLocationParser(object):
     pattern = re.compile(r"^\s*(?P<filename>.*):(?P<line>\d+)\s*$", re.UNICODE)
 
     @classmethod
@@ -404,3 +402,16 @@ def print_undefined_step_snippets(undefined_steps, stream=None, colored=True):
         msg = escapes['undefined'] + msg + escapes['reset']
     stream.write(msg)
     stream.flush()
+
+def reset_runtime():
+    """Reset runtime environment.
+    Best effort to reset module data to initial state.
+    """
+    from behave import step_registry
+    from behave import matchers
+    # -- RESET 1: behave.step_registry
+    step_registry.registry = step_registry.StepRegistry()
+    step_registry.setup_step_decorators(None, step_registry.registry)
+    # -- RESET 2: behave.matchers
+    matchers.ParseMatcher.custom_types = {}
+    matchers.current_matcher = matchers.ParseMatcher

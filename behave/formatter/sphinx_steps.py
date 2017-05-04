@@ -10,16 +10,25 @@ TODO:
 
 .. seealso::
     http://sphinx-doc.org/
+
+.. note:: REQUIRES docutils
+    :mod:`docutils` are needed to generate step-label for step references.
 """
 
 from __future__ import absolute_import, print_function
-from behave.formatter.steps import AbstractStepsFormatter
-from behave.formatter import sphinx_util
-from behave.model import Table
 from operator import attrgetter
 import inspect
 import os.path
 import sys
+from behave.formatter.steps import AbstractStepsFormatter
+from behave.formatter import sphinx_util
+from behave.model import Table
+try:
+    # -- NEEDED FOR: step-labels (and step-refs)
+    from docutils.nodes import fully_normalize_name
+    has_docutils = True
+except ImportError:
+    has_docutils = False
 
 
 # -----------------------------------------------------------------------------
@@ -102,6 +111,7 @@ class SphinxStepsDocumentGenerator(object):
     shows_step_module_info = True
     shows_step_module_overview = True
     make_step_index_entries = True
+    make_step_labels = has_docutils
 
     document_separator = "# -- DOCUMENT-END " + "-" * 60
     step_document_prefix = "step_module."
@@ -132,7 +142,7 @@ class SphinxStepsDocumentGenerator(object):
         # -- ESCAPE: Some chars required for ReST documents (like backticks)
         step_text = step_definition.string
         if "`" in step_text:
-            step_text = step_text.replace("`", "\`")
+            step_text = step_text.replace("`", r"\`")
         return u"%s %s" % (step_type_text, step_text)
 
     def ensure_destdir_exists(self):
@@ -238,6 +248,7 @@ The following step definitions are provided here.
         headings = [u"Step Definition", u"Given", u"When", u"Then", u"Step"]
         table = Table(headings)
         step_type_cols = {
+            # -- pylint: disable=bad-whitespace
             "given": [u"  x", u"  ",  u"  ",  u"  "],
             "when":  [u"  ",  u"  x", u"  ",  u"  "],
             "then":  [u"  ",  u"  ",  u"  x", u"  "],
@@ -287,12 +298,20 @@ The following step definitions are provided here.
             index_id = self.make_step_definition_index_id(step_definition)
 
         heading = step_text
+        step_label = None
         if self.step_heading_prefix:
             heading = self.step_heading_prefix + step_text
-        self.document.write_heading(heading, level=2, index_id=index_id)
+        if has_docutils and self.make_step_labels:
+            # -- ADD STEP-LABEL (supports: step-refs by name)
+            # EXAMPLE: See also :ref:`When my step does "{something}"`.
+            step_label = fully_normalize_name(step_text)
+            # SKIP-HERE: self.document.write(".. _%s:\n\n" % step_label)
+        self.document.write_heading(heading, level=2, index_id=index_id,
+                                    label=step_label)
         step_definition_doc = self.make_step_definition_doc(step_definition)
         self.document.write("%s\n" % step_definition_doc)
         self.document.write("\n")
+
 
 
 # -----------------------------------------------------------------------------
