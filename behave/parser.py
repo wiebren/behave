@@ -18,7 +18,7 @@ def parse_file(filename, language=None):
 def read_file(filename):
     with open(filename, "rb") as f:
         # file encoding is assumed to be utf8. Oh, yes.
-        data = f.read().decode("utf8")
+        return f.read().decode("utf8")
 
 
 def parse_feature(data, language=None, filename=None):
