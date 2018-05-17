@@ -1304,9 +1304,9 @@ class Step(BasicStatement, Replayable):
             return unicode(str(o), *args)
 
         for name, value in runner.context.items():
-            self.name = self.name.replace("<%%%s%%>" % name, to_unicode(str(value, 'utf-8'), 'utf-8'))
+            self.name = self.name.replace("<%%%s%%>" % name, to_unicode(value, 'utf-8'))
             if self.text:
-                self.text = self.text.replace("<%%%s%%>" % name, to_unicode(str(value, 'utf-8'), 'utf-8'))
+                self.text = self.text.replace("<%%%s%%>" % name, to_unicode(value, 'utf-8'))
 
         match = runner.step_registry.find_match(self)
         if match is None:

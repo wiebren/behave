@@ -15,7 +15,6 @@ DEFAULT_LANGUAGE = "en"
 def parse_file(filename, language=None):
     return parse_feature(read_file(filename), language, filename)
 
-
 def read_file(filename):
     with open(filename, "rb") as f:
         # file encoding is assumed to be utf8. Oh, yes.
