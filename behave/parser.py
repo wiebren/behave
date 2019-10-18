@@ -218,7 +218,7 @@ class Parser(object):
         self.reset()
         self.filename = filename
 
-        def lines(data):
+        def lines(text):
 
             for line in text.split('\n'):
                 self.line += 1
@@ -245,7 +245,7 @@ class Parser(object):
                 else:
                     self.action(line)
 
-        lines(data)
+        lines(text)
 
         if self.table:
             self.action_table("")
