@@ -15,7 +15,7 @@ import six
 
 from behave._types import ExceptionUtil
 from behave.capture import CaptureController
-from behave.configuration import ConfigError
+from behave.exception import ConfigError
 from behave.formatter._registry import make_formatters
 from behave.runner_util import \
     collect_feature_locations, parse_features, \
@@ -37,10 +37,10 @@ class ContextMaskWarning(UserWarning):
     """Raised if a context variable is being overwritten in some situations.
 
     If the variable was originally set by user code then this will be raised if
-    *behave* overwites the value.
+    *behave* overwrites the value.
 
     If the variable was originally set by *behave* then this will be raised if
-    user code overwites the value.
+    user code overwrites the value.
     """
     pass
 
@@ -129,9 +129,9 @@ class Context(object):
       output as a StringIO instance. It is not present if stderr is not being
       captured.
 
-    If an attempt made by user code to overwrite one of these variables, or
-    indeed by *behave* to overwite a user-set variable, then a
-    :class:`behave.runner.ContextMaskWarning` warning will be raised.
+    A :class:`behave.runner.ContextMaskWarning` warning will be raised if user
+    code attempts to overwrite one of these variables, or if *behave* itself
+    tries to overwrite a user-set variable.
 
     You may use the "in" operator to test whether a certain value has been set
     on the context, for example:
@@ -167,10 +167,15 @@ class Context(object):
         self._record = {}
         self._origin = {}
         self._mode = self.BEHAVE
+
+        # -- MODEL ENTITY REFERENCES/SUPPORT:
         self.feature = None
-        # -- RECHECK: If needed
+        # DISABLED: self.rule = None
+        # DISABLED: self.scenario = None
         self.text = None
         self.table = None
+
+        # -- RUNTIME SUPPORT:
         self.stdout_capture = None
         self.stderr_capture = None
         self.log_capture = None
@@ -759,7 +764,7 @@ class Runner(ModelRunner):
         base_dir = new_base_dir
         self.config.base_dir = base_dir
 
-        for dirpath, dirnames, filenames in os.walk(base_dir):
+        for dirpath, dirnames, filenames in os.walk(base_dir, followlinks=True):
             if [fn for fn in filenames if fn.endswith(".feature")]:
                 break
         else:

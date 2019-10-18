@@ -14,7 +14,7 @@ from behave.model import ScenarioOutline
 from behave.model_core import FileLocation
 from behave.reporter.junit import JUnitReporter
 from behave.reporter.summary import SummaryReporter
-from behave.tag_expression import TagExpression
+from behave.tag_expression import make_tag_expression
 from behave.formatter.base import StreamOpener
 from behave.formatter import _registry as _format_registry
 from behave.userdata import UserData, parse_user_define
@@ -60,10 +60,6 @@ class LogLevel(object):
     @staticmethod
     def to_string(level):
         return logging.getLevelName(level)
-
-
-class ConfigError(Exception):
-    pass
 
 
 # -----------------------------------------------------------------------------
@@ -299,7 +295,7 @@ options = [
     #    help="Fail if there are any undefined or pending steps.")),
 
     ((),  # -- CONFIGFILE only
-     dict(dest="default_tags", metavar="TAG_EXPRESSION",
+     dict(dest="default_tags", metavar="TAG_EXPRESSION", action="append",
           help="""Define default tags when non are provided.
                   See --tags for more information.""")),
 
@@ -588,13 +584,23 @@ class Configuration(object):
                 continue
             setattr(self, key, value)
 
+        # -- ATTRIBUTE-NAME-CLEANUP:
+        self.tag_expression = None
+        self._tags = self.tags
+        self.tags = None
+        if isinstance(self.default_tags, six.string_types):
+            self.default_tags = self.default_tags.split()
+
         self.paths = [os.path.normpath(path) for path in self.paths]
         self.setup_outputs(args.outfiles)
 
         if self.steps_catalog:
             # -- SHOW STEP-CATALOG: As step summary.
             self.default_format = "steps.catalog"
-            self.format = ["steps.catalog"]
+            if self.format:
+                self.format.append("steps.catalog")
+            else:
+                self.format = ["steps.catalog"]
             self.dry_run = True
             self.summary = False
             self.show_skipped = False
@@ -607,13 +613,15 @@ class Configuration(object):
             #  * do not capture stdout or logging output and
             #  * stop at the first failure.
             self.default_format = "plain"
-            self.tags = ["wip"] + self.default_tags.split()
+            self._tags = ["wip"] + self.default_tags
             self.color = False
             self.stop = True
             self.log_capture = False
             self.stdout_capture = False
 
-        self.tags = TagExpression(self.tags or self.default_tags.split())
+        self.tag_expression = make_tag_expression(self._tags or self.default_tags)
+        # -- BACKWARD-COMPATIBLE (BAD-NAMING STYLE; deprecating):
+        self.tags = self.tag_expression
 
         if self.quiet:
             self.show_source = False

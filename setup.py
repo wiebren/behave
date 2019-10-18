@@ -6,6 +6,12 @@ USAGE:
     python setup.py install
     python setup.py behave_test     # -- XFAIL on Windows (currently).
     python setup.py nosetests
+
+REQUIRES:
+* setuptools >= 36.2.0
+
+SEE ALSO:
+* https://setuptools.readthedocs.io/en/latest/history.html
 """
 
 import sys
@@ -19,6 +25,7 @@ sys.path.insert(0, HERE)
 from setuptools import find_packages, setup
 from setuptools_behave import behave_test
 
+
 # -----------------------------------------------------------------------------
 # CONFIGURATION:
 # -----------------------------------------------------------------------------
@@ -26,6 +33,7 @@ python_version = float("%s.%s" % sys.version_info[:2])
 BEHAVE = os.path.join(HERE, "behave")
 README = os.path.join(HERE, "README.rst")
 description = "".join(open(README).readlines()[4:])
+
 
 # -----------------------------------------------------------------------------
 # UTILITY:
@@ -47,7 +55,7 @@ def find_packages_by_root_package(where):
 # -----------------------------------------------------------------------------
 setup(
     name="behave",
-    version="1.2.7.dev0",
+    version="1.2.7.dev1",
     description="behave is behaviour-driven development, Python style",
     long_description=description,
     author="Jens Engel, Benno Rice and Richard Jones",
@@ -68,36 +76,41 @@ setup(
     # SUPPORT: python2.7, python3.3 (or higher)
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*",
     install_requires=[
+        "cucumber-tag-expressions >= 1.1.2",
         "parse >= 1.8.2",
         "parse_type >= 0.4.2",
-        "six >= 1.11.0",
+        "six >= 1.12.0",
         "traceback2; python_version < '3.0'",
         "enum34; python_version < '3.4'",
         # -- PREPARED:
         "win_unicode_console; python_version < '3.6'",
         "colorama",
-        # -- DISABLED python2.6 support:
-        #   "argparse; python_version < '2.7'",
-        #   "importlib; python_version < '2.7'",
-        #   "ordereddict; python_version < '2.7'",
     ],
-    test_suite="nose.collector",
     tests_require=[
-        "pytest >= 3.0",
-        "nose >= 1.3",
+        "pytest >= 4.2",
+        "pytest-html >= 1.19.0",
         "mock >= 1.1",
-        "PyHamcrest >= 1.8",
-        "path.py >= 10.1"
+        "PyHamcrest >= 1.9",
+        "path.py >= 11.5.0"
     ],
     cmdclass = {
         "behave_test": behave_test,
     },
     extras_require={
-        'docs': ["sphinx >= 1.6", "sphinx_bootstrap_theme >= 0.6"],
-        'develop': [
-            "coverage", "pytest >= 3.0", "pytest-cov", "tox",
-            "invoke >= 0.21.0", "path.py >= 8.1.2", "pycmd",
-            "pathlib",  # python_version <= '3.4'
+        "docs": [
+            "sphinx >= 1.6",
+            "sphinx_bootstrap_theme >= 0.6"
+        ],
+        "develop": [
+            "coverage",
+            "pytest >= 4.2",
+            "pytest-html >= 1.19.0",
+            "pytest-cov",
+            "tox",
+            "invoke >= 1.2.0",
+            "path.py >= 11.5.0",
+            "pycmd",
+            "pathlib; python_version <= '3.4'",
             "modernize >= 0.5",
             "pylint",
         ],
@@ -117,6 +130,8 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: Jython",
         "Programming Language :: Python :: Implementation :: PyPy",

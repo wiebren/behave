@@ -228,6 +228,7 @@ There's a variety of ways to access the table data - see the
 :class:`~behave.model.Table` API documentation for the full details.
 
 
+.. _docid.tutorial.python-step-implementations:
 
 Python Step Implementations
 ===========================
@@ -304,6 +305,8 @@ This function allows you to, for example:
 This will cause the "when I do the same thing as before" step to execute
 the other two steps as though they had also appeared in the scenario file.
 
+
+.. _docid.tutorial.step-parameters:
 
 Step Parameters
 ---------------
@@ -428,6 +431,8 @@ The *context* variable in all cases is an instance of
 :class:`behave.runner.Context`.
 
 
+.. _docid.tutorial.environmental-controls:
+
 Environmental Controls
 ======================
 
@@ -545,17 +550,17 @@ Given a feature file with:
 
 then running ``behave --tags=slow`` will run just the scenarios tagged
 ``@slow``. If you wish to check everything *except* the slow ones then you
-may run ``behave --tags=-slow``.
+may run ``behave --tags="not @slow"``.
 
 Another common use-case is to tag a scenario you're working on with
 ``@wip`` and then ``behave --tags=wip`` to just test that one case.
 
 Tag selection on the command-line may be combined:
 
-* ``--tags=wip,slow``
+* ``--tags="@wip or @slow"``
    This will select all the cases tagged *either* "wip" or "slow".
 
-* ``--tags=wip --tags=slow``
+* ``--tags="@wip and @slow"``
    This will select all the cases tagged *both* "wip" and "slow".
 
 If a feature or scenario is tagged and then skipped because of a
@@ -576,7 +581,7 @@ the functions will be called multiple times with each tag in the order
 they're defined in the feature file.
 
 Re-visiting the example from above; if only some of the features required a
-browser and web server then you could tag them ``@browser``:
+browser and web server then you could tag them ``@fixture.browser``:
 
 .. code-block:: python
 
@@ -586,7 +591,7 @@ browser and web server then you could tag them ``@browser``:
 
     def before_feature(context, feature):
         model.init(environment='test')
-        if 'browser' in feature.tags:
+        if "fixture.browser" in feature.tags:
             use_fixture(wsgi_server, context)
             use_fixture(selenium_browser_chrome, context)
 

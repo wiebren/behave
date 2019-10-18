@@ -11,8 +11,8 @@ Django, though, varies slightly.
     Provides a dedicated management command.  Easy, automatic integration (thanks
     to monkey patching).  Behave tests are run with ``python manage.py behave``.
     Allows running tests against an existing database as a special feature.
-    See `setup behave-django <https://pythonhosted.org/behave-django/installation.html>`_
-    and `usage <https://pythonhosted.org/behave-django/usage.html>`_ instructions.
+    See `setup behave-django <https://behave-django.readthedocs.io/en/latest/installation.html>`_
+    and `usage <https://behave-django.readthedocs.io/en/latest/usage.html>`_ instructions.
 
 :pypi:`django-behave`
     Provides a Django-specific TestRunner for Behave, which is set with the
@@ -22,8 +22,8 @@ Django, though, varies slightly.
     instructions.
 
 .. _Django: https://www.djangoproject.com
-.. _LiveServerTestCase: https://docs.djangoproject.com/en/1.8/topics/testing/tools/#liveservertestcase
-.. _TEST_RUNNER: https://docs.djangoproject.com/en/1.8/topics/testing/advanced/#using-different-testing-frameworks
+.. _LiveServerTestCase: https://docs.djangoproject.com/en/stable/topics/testing/tools/#liveservertestcase
+.. _TEST_RUNNER: https://docs.djangoproject.com/en/stable/topics/testing/advanced/#using-different-testing-frameworks
 
 
 Manual Integration
@@ -75,10 +75,10 @@ in your ``environment.py`` file:
         use_fixture(django_test_case, context)
 
 
-Taken from Andrey Zarubin's blog post "`BDD. PyCharm + Python & Django`_".
+Taken and adapted from Andrey Zarubin's blog post "`BDD. PyCharm + Python & Django`_".
 
 .. _`BDD. PyCharm + Python & Django`:
-    https://anvileight.com/blog/2016/04/12/behavior-driven-development-pycharm-python-django/
+    https://blog.anvileight.com/posts/behavior-driven-development-pycharm-python-django/
 
 
 Strategies and Tooling

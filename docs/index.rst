@@ -33,6 +33,7 @@ Contents
    tutorial
    philosophy
    gherkin
+   tag_expressions
    behave
    api
    fixtures
@@ -47,7 +48,7 @@ Contents
 .. seealso::
 
     * `behave.example`_: `Behave Examples and Tutorials`_ (HTML)
-    * Peter Parente: `BDD and Behave <http://tott-meetup.readthedocs.io/en/latest/sessions/behave.html>`_ (tutorial)
+    * Peter Parente: `BDD and Behave <https://tott-meetup.readthedocs.io/en/latest/sessions/behave.html>`_ (tutorial)
 
 .. _behave.example: https://github.com/behave/behave.example
 .. _`Behave Examples and Tutorials`: http://behave.github.io/behave.example/

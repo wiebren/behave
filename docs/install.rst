@@ -15,12 +15,6 @@ To update an already installed :pypi:`behave` version, use:
 
     pip install -U behave
 
-As an alternative,
-you can also use :pypi:`easy_install <setuptools>` to install :pypi:`behave`::
-
-    easy_install behave         # CASE: New installation.
-    easy_install -U behave      # CASE: Upgrade existing installation.
-
 
 .. hint::
 
@@ -37,11 +31,14 @@ enter the newly created directory "behave-<version>" and run::
 
     python setup.py install
 
+    # OR:
+    pip install .
+
 
 Using the Github Repository
 ---------------------------
 
-:Category: Bleading edge
+:Category: Bleeding edge
 :Precondition: :pypi:`pip` is installed
 
 Run the following command
