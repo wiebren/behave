@@ -31,6 +31,10 @@ ENHANCEMENTS:
 * issue #678: Scenario Outline: Support tags with commas and semicolons (provided by: lawnmowerlatte, pull #679)
 * issue #675: Feature files cannot be found within symlink directories (provided by: smadness, pull #680)
 
+CLARIFICATION:
+
+* issue #810: Clarify select-by-name using regex pattern (submitted by: xv-chris-w)
+
 FIXED:
 
 * issue #772: ScenarioOutline.Examples without table (submitted by: The-QA-Geek)
@@ -44,6 +48,7 @@ FIXED:
 
 MINOR:
 
+* issue #800: Cleanups related to Gherkin parser/ParseError question (submitted by: otstanteplz)
 * pull  #767: FIX: use_fixture_by_tag didn't return the actual fixture in all cases (provided by: jgentil)
 * pull  #751: gherkin: Adding Rule keyword translation in portuguese and spanish to gherkin-languages.json (provided by: dunossauro)
 * pull  #660: Fix minor typos (provided by: rrueth)
