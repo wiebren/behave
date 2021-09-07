@@ -119,7 +119,7 @@ setup(
         ],
     },
     # MAYBE-DISABLE: use_2to3
-    use_2to3= bool(python_version >= 3.0),
+    #use_2to3= bool(python_version >= 3.0),
     license="BSD",
     classifiers=[
         "Development Status :: 4 - Beta",
