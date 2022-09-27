@@ -102,4 +102,5 @@ def select_tag_expression_parser(tag_expression_text):
 
     # -- OTHERWISSE: Use cucumber-tag-expressions
     # CASE: "@foo" (1 tag)
-    return parse_tag_expression_v2
+    # TODO workaround for https://youtrack.jetbrains.com/issue/PY-37711
+    return parse_tag_expression_v1
