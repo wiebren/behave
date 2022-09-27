@@ -128,9 +128,9 @@ class TestActiveTagMatcher2(object):
         # -- GROUP: With negated tag
         ("case N00: not-enabled and disabled tag", True,
          [ traits.category1_not_enabled_tag, traits.category1_disabled_tag]),
-        ("case N01: not-enabled and enabled tag", False,
+        ("case N01: not-enabled and enabled tag", True,
          [ traits.category1_not_enabled_tag, traits.category1_enabled_tag]),
-        ("case N10: not-disabled and disabled tag", False,
+        ("case N10: not-disabled and disabled tag", True,
          [ traits.category1_not_disabled_tag, traits.category1_disabled_tag]),
         ("case N11: not-disabled and enabled tag", False, # -- SHOULD-RUN
          [ traits.category1_not_disabled_tag, traits.category1_enabled_tag]),
@@ -138,6 +138,8 @@ class TestActiveTagMatcher2(object):
     def test_should_exclude_with__combinations_with_same_category(self,
                                                         case, expected, tags):
         tag_matcher = self.make_tag_matcher()
+        print("tags: {}".format(tags) )
+        print("tag_matcher.value: {}".format(tag_matcher.value_provider) )
         actual_result = tag_matcher.should_exclude_with(tags)
         assert expected == actual_result, case
 
@@ -224,6 +226,7 @@ class TestActiveTagMatcher1(TestCase):
 
     def test_should_exclude_with__returns_false_with_disabled_tag_and_more(self):
         # -- NOTE: Need 1+ enabled active-tags of same category => ENABLED
+        # pylint: disable=line-too-long
         traits = self.traits
         test_patterns = [
             ([ traits.category1_enabled_tag, traits.category1_disabled_tag ], "case: first"),
@@ -283,7 +286,7 @@ class TestActiveTagMatcher1(TestCase):
         """
         traits = self.traits
         tags = [ traits.unknown_category_tag ]
-        self.assertEqual("active.with_UNKNOWN=one", traits.unknown_category_tag)
+        self.assertEqual("use.with_UNKNOWN=one", traits.unknown_category_tag)
         self.assertEqual(None, self.tag_matcher.value_provider.get("UNKNOWN"))
         self.assertEqual(False, self.tag_matcher.should_exclude_with(tags))
 
@@ -338,42 +341,6 @@ class TestActiveTagMatcher1(TestCase):
             result2 = self.tag_matcher.should_exclude_with(tags)
             self.assertEqual(result1, not result2, "%s: tags=%s" % (case, tags))
             self.assertEqual(not result1, result2, "%s: tags=%s" % (case, tags))
-
-
-class TestPredicateTagMatcher(TestCase):
-
-    def test_exclude_with__mechanics(self):
-        predicate_function_blueprint = lambda tags: False
-        predicate_function = Mock(predicate_function_blueprint)
-        predicate_function.return_value = True
-        tag_matcher = PredicateTagMatcher(predicate_function)
-        tags = [ "foo", "bar" ]
-        self.assertEqual(True, tag_matcher.should_exclude_with(tags))
-        predicate_function.assert_called_once_with(tags)
-        self.assertEqual(True, predicate_function(tags))
-
-    def test_should_exclude_with__returns_true_when_predicate_is_true(self):
-        predicate_always_true = lambda tags: True
-        tag_matcher1 = PredicateTagMatcher(predicate_always_true)
-        tags = [ "foo", "bar" ]
-        self.assertEqual(True, tag_matcher1.should_exclude_with(tags))
-        self.assertEqual(True, predicate_always_true(tags))
-
-    def test_should_exclude_with__returns_true_when_predicate_is_true2(self):
-        # -- CASE: Use predicate function instead of lambda.
-        def predicate_contains_foo(tags):
-            return any(x == "foo" for x in tags)
-        tag_matcher2 = PredicateTagMatcher(predicate_contains_foo)
-        tags = [ "foo", "bar" ]
-        self.assertEqual(True, tag_matcher2.should_exclude_with(tags))
-        self.assertEqual(True, predicate_contains_foo(tags))
-
-    def test_should_exclude_with__returns_false_when_predicate_is_false(self):
-        predicate_always_false = lambda tags: False
-        tag_matcher1 = PredicateTagMatcher(predicate_always_false)
-        tags = [ "foo", "bar" ]
-        self.assertEqual(False, tag_matcher1.should_exclude_with(tags))
-        self.assertEqual(False, predicate_always_false(tags))
 
 
 class TestPredicateTagMatcher(TestCase):

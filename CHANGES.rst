@@ -6,13 +6,12 @@ Version: 1.2.7 (unreleased)
 
 BACKWARD-INCOMPATIBLE:
 
-* Replace old-style tag-expressions with `cucumber-tag-expressions`_
+* Replace old-style tag-expressions with `cucumber-tag-expressions`_ as ``tag-expressions v2``.
 
   HINTS:
 
-  - DEPRECATING: tag-expressions v1 (old-style)
+  - DEPRECATING: ``tag-expressions v1`` (old-style)
   - BUT: Currently, tag-expression version is automatically detected (and used).
-
 
 GOALS:
 
@@ -20,6 +19,16 @@ GOALS:
 - FIX: Unicode problems on Windows (in behave-1.2.6)
 - FIX: Regression test problems on Windows (in behave-1.2.6)
 
+DEVELOPMENT:
+
+* Renamed default branch of Git repository to "main" (was: "master").
+* Use github-actions as CI/CD pipeline (and remove Travis as CI).
+
+CLEANUPS:
+
+* Remove ``stdout_capture``, ``stderr_capture``, ``log_capture``
+  attributes from ``behave.runner.Context`` class
+  (use: ``captured`` attribute instead).
 
 ENHANCEMENTS:
 
@@ -28,6 +37,10 @@ ENHANCEMENTS:
 * Use cucumber "gherkin-languages.json" now (simplify: Gherkin v6 aliases, language usage)
 * Support emojis in ``*.feature`` files and steps
 * Select-by-location: Add support for "Scenario container" (Feature, Rule, ScenarioOutline) (related to: #391)
+* pull  #988: setup.py: Add category to install additional formatters (html) (provided-by: bittner)
+* pull  #895: UPDATE: i18n/gherkin-languages.json from cucumber repository #895 (related to: #827)
+* pull  #827: Fixed keyword translation in Estonian #827 (provided by: ookull)
+* issue #740: Enhancement: possibility to add cleanup to be called upon leaving outer context stack frames (submitted by: nizwiz, dcvmoole)
 * issue #678: Scenario Outline: Support tags with commas and semicolons (provided by: lawnmowerlatte, pull #679)
 * issue #675: Feature files cannot be found within symlink directories (provided by: smadness, pull #680)
 
@@ -37,17 +50,23 @@ CLARIFICATION:
 
 FIXED:
 
+* FIXED: Some tests related to python3.9
+* FIXED: active-tag logic if multiple tags with same category exists.
+* pull  #967: Update __init__.py in behave import to fix pylint (provided by: dsayling)
+* issue #955: setup: Remove attribute 'use_2to3' (submitted by: krisgesling)
 * issue #772: ScenarioOutline.Examples without table (submitted by: The-QA-Geek)
 * issue #755: Failures with Python 3.8 (submitted by: hroncok)
 * issue #725: Scenario Outline description lines seem to be ignored (submitted by: nizwiz)
 * issue #713: Background section doesn't support description (provided by: dgou)
 * pull  #657: Allow async steps with timeouts to fail when they raise exceptions (provided by: ALSchwalm)
+* issue #641: Pylint errors when importing given - when - then from behave (solved by: #967)
 * issue #631: ScenarioOutline variables not possible in table headings (provided by: mschnelle, pull #642)
 * issue #619: Context __getattr__ should raise AttributeError instead of KeyError (submitted by: anxodio)
 * pull  #588: Steps-catalog argument should not break configured rerun settings (provided by: Lego3)
 
 MINOR:
 
+* issue #1047: Step type is inherited for generic step if possible (submitted by: zettseb)
 * issue #800: Cleanups related to Gherkin parser/ParseError question (submitted by: otstanteplz)
 * pull  #767: FIX: use_fixture_by_tag didn't return the actual fixture in all cases (provided by: jgentil)
 * pull  #751: gherkin: Adding Rule keyword translation in portuguese and spanish to gherkin-languages.json (provided by: dunossauro)
@@ -57,6 +76,8 @@ MINOR:
 
 DOCUMENTATION:
 
+* pull  #989: Add more tutorial links: Nicole Harris, Nick Coghlan (provided by: ncoghlan, bittner; related: #848)
+* pull  #877: docs: API reference - Capitalizing Step Keywords in example (provided by: Ibrian93)
 * pull  #731: Update links to Django docs (provided by: bittner)
 * pull  #722: DOC remove remaining pythonhosted links (provided by: leszekhanusz)
 * pull  #701: behave/runner.py docstrings (provided by: spitGlued)
@@ -64,6 +85,12 @@ DOCUMENTATION:
 * pull  #699: Fix wording of "philosophy.rst" (provided by: spitGlued)
 * pull  #684: Fix typo in "install.rst" (provided by: mstred)
 * pull  #628: Changed pythonhosted.org links to readthedocs.io (provided by: chrisbrake)
+
+BREAKING CHANGES (naming):
+
+* behave.runner.Context._push(layer=None): Was Context._push(layer_name=None)
+* behave.runner.scoped_context_layer(context, layer=None):
+  Was scoped_context_layer(context.layer_name=None)
 
 
 .. _`cucumber-tag-expressions`: https://pypi.org/project/cucumber-tag-expressions/

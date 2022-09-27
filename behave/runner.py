@@ -122,30 +122,20 @@ class Context(object):
       :class:`~behave.model.Row` that is active for the current scenario. It is
       present mostly for debugging, but may be useful otherwise.
 
-    .. attribute:: log_capture
+    .. attribute:: captured
 
-      If logging capture is enabled then this attribute contains the captured
-      logging as an instance of :class:`~behave.log_capture.LoggingCapture`.
-      It is not present if logging is not being captured.
+        If any output capture is enabled, provides access to a
+        :class:`~behave.capture.Captured` object that contains a snapshot
+        of all captured data (stdout/stderr/log).
 
-    .. attribute:: stdout_capture
-
-      If stdout capture is enabled then this attribute contains the captured
-      output as a StringIO instance. It is not present if stdout is not being
-      captured.
-
-    .. attribute:: stderr_capture
-
-      If stderr capture is enabled then this attribute contains the captured
-      output as a StringIO instance. It is not present if stderr is not being
-      captured.
+        .. versionadded:: 1.3.0
 
     A :class:`behave.runner.ContextMaskWarning` warning will be raised if user
     code attempts to overwrite one of these variables, or if *behave* itself
     tries to overwrite a user-set variable.
 
     You may use the "in" operator to test whether a certain value has been set
-    on the context, for example:
+    on the context, for example::
 
         "feature" in context
 
@@ -158,6 +148,7 @@ class Context(object):
     .. _`configuration file section names`: behave.html#configuration-files
     """
     # pylint: disable=too-many-instance-attributes
+    LAYER_NAMES = ["testrun", "feature", "rule", "scenario"]
     FAIL_ON_CLEANUP_ERRORS = True
 
     def __init__(self, runner):
@@ -178,16 +169,16 @@ class Context(object):
         self._mode = ContextMode.BEHAVE
 
         # -- MODEL ENTITY REFERENCES/SUPPORT:
-        self.feature = None
         # DISABLED: self.rule = None
         # DISABLED: self.scenario = None
+        self.feature = None
         self.text = None
         self.table = None
 
         # -- RUNTIME SUPPORT:
-        self.stdout_capture = None
-        self.stderr_capture = None
-        self.log_capture = None
+        # DISABLED: self.stdout_capture = None
+        # DISABLED: self.stderr_capture = None
+        # DISABLED: self.log_capture = None
         self.fail_on_cleanup_errors = self.FAIL_ON_CLEANUP_ERRORS
 
     @staticmethod
@@ -245,16 +236,15 @@ class Context(object):
             del cleanup_errors  # -- ENSURE: Release other exception frames.
             six.reraise(*first_cleanup_erro_info)
 
-
-    def _push(self, layer_name=None):
+    def _push(self, layer=None):
         """Push a new layer on the context stack.
-        HINT: Use layer_name values: "scenario", "feature", "testrun".
+        HINT: Use layer values: "testrun", "feature", "rule, "scenario".
 
-        :param layer_name:   Layer name to use (or None).
+        :param layer:   Layer name to use (or None).
         """
         initial_data = {"@cleanups": []}
-        if layer_name:
-            initial_data["@layer"] = layer_name
+        if layer:
+            initial_data["@layer"] = layer
         self._stack.insert(0, initial_data)
 
     def _pop(self):
@@ -433,6 +423,20 @@ class Context(object):
             self.text = original_text
         return True
 
+    def _select_stack_frame_by_layer(self, layer):
+        """Select context stack frame by layer name.
+
+        :param layer:   Layer name (as string).
+        :return: Selected frame object (if any)
+        :raises: LookupError, if layer was not found.
+        """
+        for frame in self._stack:
+            frame_layer = frame.get("@layer", None)
+            if layer == frame_layer:
+                return frame
+        # -- OOPS, NOT FOUND:
+        raise LookupError("Context.stack: layer=%s not found" % layer)
+
     def add_cleanup(self, cleanup_func, *args, **kwargs):
         """Adds a cleanup function that is called when :meth:`Context._pop()`
         is called. This is intended for user-cleanups.
@@ -440,10 +444,21 @@ class Context(object):
         :param cleanup_func:    Callable function
         :param args:            Args for cleanup_func() call (optional).
         :param kwargs:          Kwargs for cleanup_func() call (optional).
+
+        .. note:: RESERVED :obj:`layer` : optional-string
+
+            The keyword argument ``layer="LAYER_NAME"`` can to be used to
+            assign the :obj:`cleanup_func` to specific a layer on the context stack
+            (instead of the current layer).
+
+            Known layer names are: "testrun", "feature", "rule", "scenario"
+
+        .. seealso:: :attr:`.Context.LAYER_NAMES`
         """
         # MAYBE:
         assert callable(cleanup_func), "REQUIRES: callable(cleanup_func)"
         assert self._stack
+        layer = kwargs.pop("layer", None)
         if args or kwargs:
             def internal_cleanup_func():
                 cleanup_func(*args, **kwargs)
@@ -451,9 +466,26 @@ class Context(object):
             internal_cleanup_func = cleanup_func
 
         current_frame = self._stack[0]
+        if layer:
+            current_frame = self._select_stack_frame_by_layer(layer)
         if cleanup_func not in current_frame["@cleanups"]:
             # -- AVOID DUPLICATES:
             current_frame["@cleanups"].append(internal_cleanup_func)
+
+    @property
+    def captured(self):
+        return self._runner.captured
+
+    def attach(self, mime_type, data):
+        """Embeds data (e.g. a screenshot) in reports for all
+        formatters that support it, such as the JSON formatter.
+
+        :param mime_type:       MIME type of the binary data.
+        :param data:            Bytes-like object to embed.
+        """
+        is_compatible = lambda f: hasattr(f, "embedding")
+        for formatter in filter(is_compatible, self._runner.formatters):
+            formatter.embedding(mime_type, data)
 
 
 @contextlib.contextmanager
@@ -484,7 +516,7 @@ def use_context_with_mode(context, mode):
 
 
 @contextlib.contextmanager
-def scoped_context_layer(context, layer_name=None):
+def scoped_context_layer(context, layer=None):
     """Provides context manager for context layer (push/do-something/pop cycle).
 
     .. code-block::
@@ -494,7 +526,7 @@ def scoped_context_layer(context, layer_name=None):
     """
     # pylint: disable=protected-access
     try:
-        context._push(layer_name)
+        context._push(layer)
         yield context
     finally:
         context._pop()
@@ -531,6 +563,14 @@ class ModelRunner(object):
           This is set to true when the user aborts a test run
           (:exc:`KeyboardInterrupt` exception). Initially: False.
           Stored as derived attribute in :attr:`Context.aborted`.
+
+    .. attribute:: captured
+
+        If any output capture is enabled, provides access to a
+        :class:`~behave.capture.Captured` object that contains a snapshot
+        of all captured data (stdout/stderr/log).
+
+        .. versionadded:: 1.3.0
     """
     # pylint: disable=too-many-instance-attributes
 
@@ -623,6 +663,13 @@ class ModelRunner(object):
     def teardown_capture(self):
         self.capture_controller.teardown_capture()
 
+    @property
+    def captured(self):
+        """Return the current state of the captured output/logging
+        (as captured object).
+        """
+        return self.capture_controller.captured
+
     def run_model(self, features=None):
         # pylint: disable=too-many-branches
         if not self.context:
@@ -695,19 +742,18 @@ class ModelRunner(object):
 
 
 class Runner(ModelRunner):
-    """
-    Standard test runner for behave:
+    """Standard test runner for behave:
 
       * setup paths
       * loads environment hooks
       * loads step definitions
       * select feature files, parses them and creates model (elements)
     """
+
     def __init__(self, config):
         super(Runner, self).__init__(config)
         self.path_manager = PathManager()
         self.base_dir = None
-
 
     def setup_paths(self):
         # pylint: disable=too-many-branches, too-many-statements

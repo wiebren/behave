@@ -1,34 +1,28 @@
 # -*- coding: UTF-8 -*-
-# FILE: features/environemnt.py
+# FILE: features/environment.py
 
 from __future__ import absolute_import, print_function
-from behave.tag_matcher import ActiveTagMatcher, setup_active_tag_values
+from behave.tag_matcher import \
+    ActiveTagMatcher, setup_active_tag_values, print_active_tags
 from behave4cmd0.setup_command_shell import setup_command_shell_processors4behave
+from behave import python_feature
 import platform
 import sys
-import six
+
 
 # -- MATCHES ANY TAGS: @use.with_{category}={value}
 # NOTE: active_tag_value_provider provides category values for active tags.
-python_version = "%s.%s" % sys.version_info[:2]
 active_tag_value_provider = {
-    "python2": str(six.PY2).lower(),
-    "python3": str(six.PY3).lower(),
-    "python.version": python_version,
     # -- python.implementation: cpython, pypy, jython, ironpython
     "python.implementation": platform.python_implementation().lower(),
     "pypy":    str("__pypy__" in sys.modules).lower(),
-    "os":      sys.platform,
 }
+active_tag_value_provider.update(python_feature.ACTIVE_TAG_VALUE_PROVIDER)
 active_tag_matcher = ActiveTagMatcher(active_tag_value_provider)
 
 
 def print_active_tags_summary():
-    active_tag_data = active_tag_value_provider
-    print("ACTIVE-TAG SUMMARY:")
-    print("use.with_python.version=%s" % active_tag_data.get("python.version"))
-    # print("use.with_os=%s" % active_tag_data.get("os"))
-    print()
+    print_active_tags(active_tag_value_provider, ["python.version", "os"])
 
 
 # -----------------------------------------------------------------------------
@@ -52,6 +46,7 @@ def before_feature(context, feature):
 def before_scenario(context, scenario):
     if active_tag_matcher.should_exclude_with(scenario.effective_tags):
         scenario.skip(reason=active_tag_matcher.exclude_reason)
+
 
 # -----------------------------------------------------------------------------
 # SPECIFIC FUNCTIONALITY:

@@ -52,13 +52,17 @@ for optional_module_name in optional_extensions:
 
 
 extlinks = {
-    "pypi": ("https://pypi.org/project/%s", ""),
-    "github": ("https://github.com/%s", "github:/"),
+    "behave": ("https://github.com/behave/behave", None),
+    "behave.example": ("https://github.com/behave/behave.example", None),
     "issue":  ("https://github.com/behave/behave/issues/%s", "issue #"),
+    "pull":  ("https://github.com/behave/behave/issues/%s", "PR #"),
+    "github": ("https://github.com/%s", "github:/"),
+    "pypi": ("https://pypi.org/project/%s", ""),
     "youtube": ("https://www.youtube.com/watch?v=%s", "youtube:video="),
     "behave": ("https://github.com/behave/behave", None),
-    "cucumber": ("https://github.com/cucumber/cucumber/", None),
-    "cucumber.issue": ("https://github.com/cucumber/cucumber/issues/%s", "issue #"),
+
+    "cucumber": ("https://github.com/cucumber/common/", None),
+    "cucumber.issue": ("https://github.com/cucumber/common/issues/%s", "cucumber issue #"),
 }
 
 intersphinx_mapping = {
@@ -108,7 +112,7 @@ if USE_SPHINX_INTERNATIONAL:
 # -----------------------------------------------------------------------------
 project = u"behave"
 authors = u"Jens Engel, Benno Rice and Richard Jones"
-copyright = u"2012-2019, %s" % authors
+copyright = u"2012-2021, %s" % authors
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

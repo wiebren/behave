@@ -8,6 +8,7 @@ import re
 import sys
 import shlex
 import six
+from importlib import import_module
 from six.moves import configparser
 
 from behave.model import ScenarioOutline
@@ -65,15 +66,26 @@ class LogLevel(object):
 # -----------------------------------------------------------------------------
 # CONFIGURATION SCHEMA:
 # -----------------------------------------------------------------------------
+
+def valid_python_module(path):
+    try:
+        module_path, class_name = path.rsplit('.', 1)
+        module = import_module(module_path)
+        return getattr(module, class_name)
+    except (ValueError, AttributeError, ImportError):
+        raise argparse.ArgumentTypeError("No module named '%s' was found." % path)
+
+
 options = [
     (("-c", "--no-color"),
      dict(action="store_false", dest="color",
           help="Disable the use of ANSI color escapes.")),
 
     (("--color",),
-     dict(action="store_true", dest="color",
-          help="""Use ANSI color escapes. This is the default
-                  behaviour. This switch is used to override a
+     dict(dest="color", choices=["never", "always", "auto"],
+          default=os.getenv('BEHAVE_COLOR'), const="auto", nargs="?",
+          help="""Use ANSI color escapes. Defaults to %(const)r.
+                  This switch is used to override a
                   configuration file setting.""")),
 
     (("-d", "--dry-run"),
@@ -111,6 +123,11 @@ options = [
      dict(metavar="PATH", dest="junit_directory",
           default="reports",
           help="""Directory in which to store JUnit reports.""")),
+
+    (("--runner-class",),
+     dict(action="store",
+          default="behave.runner.Runner", type=valid_python_module,
+          help="Tells Behave to use a specific runner. (default: %(default)s)")),
 
     ((),  # -- CONFIGFILE only
      dict(dest="default_format",
@@ -490,7 +507,7 @@ class Configuration(object):
     """Configuration object for behave and behave runners."""
     # pylint: disable=too-many-instance-attributes
     defaults = dict(
-        color=sys.platform != "win32",
+        color='never' if sys.platform == "win32" else os.getenv('BEHAVE_COLOR', 'auto'),
         show_snippets=True,
         show_skipped=True,
         dry_run=False,
@@ -544,6 +561,16 @@ class Configuration(object):
         if verbose is None:
             # -- AUTO-DISCOVER: Verbose mode from command-line args.
             verbose = ("-v" in command_args) or ("--verbose" in command_args)
+
+        # Allow commands like `--color features/whizbang.feature` to work
+        # Without this, argparse will treat the positional arg as the value to
+        # --color and we'd get:
+        #   argument --color: invalid choice: 'features/whizbang.feature'
+        #   (choose from 'never', 'always', 'auto')
+        if '--color' in command_args:
+            color_arg_pos = command_args.index('--color')
+            if os.path.exists(command_args[color_arg_pos + 1]):
+                command_args.insert(color_arg_pos + 1, '--')
 
         self.version = None
         self.tags_help = None
