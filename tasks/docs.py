@@ -12,7 +12,7 @@ from path import Path
 
 # -- TASK-LIBRARY:
 # PREPARED: from invoke_cleanup import cleanup_tasks, cleanup_dirs
-from .invoke_cleanup import cleanup_tasks, cleanup_dirs
+from invoke_cleanup import cleanup_tasks, cleanup_dirs
 
 
 # -----------------------------------------------------------------------------
@@ -24,7 +24,7 @@ SPHINX_LANGUAGE_DEFAULT = os.environ.get("SPHINX_LANGUAGE", "en")
 
 
 # -----------------------------------------------------------------------------
-# UTILTITIES:
+# UTILITIES:
 # -----------------------------------------------------------------------------
 def _sphinxdoc_get_language(ctx, language=None):
     language = language or ctx.config.sphinx.language or SPHINX_LANGUAGE_DEFAULT
@@ -100,6 +100,7 @@ def autobuild(ctx, builder="html", language=None, options=""):
     destdir = destdir.abspath()
     with cd(sourcedir):
         destdir_relative = Path(".").relpathto(destdir)
+        # ruff: noqa: E501
         command = "sphinx-autobuild {opts} -b {builder} -D language={language} {sourcedir} {destdir}" \
                     .format(builder=builder, sourcedir=".",
                             destdir=destdir_relative,
@@ -110,7 +111,7 @@ def autobuild(ctx, builder="html", language=None, options=""):
 
 @task
 def linkcheck(ctx):
-    """Check if all links are corect."""
+    """Check if all links are correct."""
     build(ctx, builder="linkcheck")
 
 

@@ -16,6 +16,7 @@ Feature: Issue #67: JSON formatter cannot serialize tables.
       from behave import given, when, then
 
       @given(u'I add the following employees')
+      @given(u'I add the following employees:')
       def step(context):
           pass  # -- SKIP: Table processing here.
 
@@ -24,6 +25,7 @@ Feature: Issue #67: JSON formatter cannot serialize tables.
           context.department = department
 
       @then(u'I get the following employees')
+      @then(u'I get the following employees:')
       def step(context):
           pass  # -- SKIP: Table processing here.
       """
@@ -44,7 +46,7 @@ Feature: Issue #67: JSON formatter cannot serialize tables.
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 0 skipped
-      3 steps passed, 0 failed, 0 skipped, 0 undefined
+      3 steps passed, 0 failed, 0 skipped
       """
     But the command output should not contain:
       """
@@ -85,6 +87,6 @@ Feature: Issue #67: JSON formatter cannot serialize tables.
     Then it should pass with:
       """
       2 scenarios passed, 0 failed, 0 skipped
-      6 steps passed, 0 failed, 0 skipped, 0 undefined
+      6 steps passed, 0 failed, 0 skipped
       """
 

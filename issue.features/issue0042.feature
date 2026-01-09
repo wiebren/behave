@@ -1,5 +1,5 @@
 @issue
-Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into account of the tags fltering
+Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into account of the tags filtering
 
   As a user
   I want that all undefined steps are reported,
@@ -45,9 +45,10 @@ Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into
     And the command output should contain:
       """
       You can implement step definitions for undefined steps with these snippets:
+      from behave.api.pending_step import StepNotImplementedError
       @given(u'an unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: Given an unknown step')
+          raise StepNotImplementedError(u'Given an unknown step')
       """
 
   Scenario: Two undefined steps in a scenario
@@ -68,13 +69,14 @@ Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into
     And the command output should contain:
       """
       You can implement step definitions for undefined steps with these snippets:
+      from behave.api.pending_step import StepNotImplementedError
       @given(u'an unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: Given an unknown step')
+          raise StepNotImplementedError(u'Given an unknown step')
 
       @when(u'another unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: When another unknown step')
+          raise StepNotImplementedError(u'When another unknown step')
       """
 
   Scenario: Two undefined steps in the middle with passing steps
@@ -95,13 +97,14 @@ Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into
     And the command output should contain:
       """
       You can implement step definitions for undefined steps with these snippets:
+      from behave.api.pending_step import StepNotImplementedError
       @when(u'an unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: When an unknown step')
+          raise StepNotImplementedError(u'When an unknown step')
 
       @when(u'another unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: When another unknown step')
+          raise StepNotImplementedError(u'When another unknown step')
       """
 
   Scenario: Undefined steps are detected if they occur after a failing step
@@ -122,13 +125,14 @@ Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into
     And the command output should contain:
       """
       You can implement step definitions for undefined steps with these snippets:
+      from behave.api.pending_step import StepNotImplementedError
       @then(u'an unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: Then an unknown step')
+          raise StepNotImplementedError(u'Then an unknown step')
 
       @then(u'another unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: Then another unknown step')
+          raise StepNotImplementedError(u'Then another unknown step')
       """
 
   Scenario: Failing step after first undefined step should be marked as skipped
@@ -149,13 +153,14 @@ Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into
     And the command output should contain:
       """
       You can implement step definitions for undefined steps with these snippets:
+      from behave.api.pending_step import StepNotImplementedError
       @when(u'an unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: When an unknown step')
+          raise StepNotImplementedError(u'When an unknown step')
 
       @then(u'another unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: Then another unknown step')
+          raise StepNotImplementedError(u'Then another unknown step')
       """
 
   Scenario: Two undefined steps in scenario outline
@@ -181,13 +186,14 @@ Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into
     And the command output should contain:
       """
       You can implement step definitions for undefined steps with these snippets:
+      from behave.api.pending_step import StepNotImplementedError
       @given(u'an unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: Given an unknown step')
+          raise StepNotImplementedError(u'Given an unknown step')
 
       @when(u'another unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: When another unknown step')
+          raise StepNotImplementedError(u'When another unknown step')
       """
 
   Scenario: Two undefined steps and run with tags
@@ -220,11 +226,12 @@ Feature: Issue #42 Nice to have snippets for all unimplemented steps taking into
     And the command output should contain:
       """
       You can implement step definitions for undefined steps with these snippets:
+      from behave.api.pending_step import StepNotImplementedError
       @when(u'an unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: When an unknown step')
+          raise StepNotImplementedError(u'When an unknown step')
 
       @when(u'another unknown step')
       def step_impl(context):
-          raise NotImplementedError(u'STEP: When another unknown step')
+          raise StepNotImplementedError(u'When another unknown step')
       """

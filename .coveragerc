@@ -3,8 +3,8 @@
 # =========================================================================
 # LANGUAGE: Python
 # SEE ALSO:
-#  * http://nedbatchelder.com/code/coverage/
-#  * http://nedbatchelder.com/code/coverage/config.html
+#  * https://nedbatchelder.com/code/coverage/
+#  * https://nedbatchelder.com/code/coverage/config.html
 # =========================================================================
 
 [run]
@@ -27,6 +27,7 @@ exclude_lines =
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
     raise NotImplementedError
+    raise StepNotImplementedError
 
     # Don't complain if non-runnable code isn't run:
     if 0:

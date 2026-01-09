@@ -98,16 +98,16 @@ Feature: Issue #85: AssertionError with nested regex and pretty formatter
         """
         1 feature passed, 0 failed, 0 skipped
         5 scenarios passed, 0 failed, 0 skipped
-        24 steps passed, 0 failed, 0 skipped, 0 undefined
+        24 steps passed, 0 failed, 0 skipped
         """
 
   Scenario: Run regexp steps with --format=pretty
-    When I run "behave -c --format=pretty features/matching.feature"
+    When I run "behave --no-color --format=pretty features/matching.feature"
     Then it should pass with:
         """
         1 feature passed, 0 failed, 0 skipped
         5 scenarios passed, 0 failed, 0 skipped
-        24 steps passed, 0 failed, 0 skipped, 0 undefined
+        24 steps passed, 0 failed, 0 skipped
         """
     And  the command output should not contain
         """

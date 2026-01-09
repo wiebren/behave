@@ -3,8 +3,9 @@
 
 from __future__ import absolute_import, print_function
 import os.path
-from behave import given, when, then
+from behave import given, when
 import six
+
 
 @given(u'I create a symlink from "{source}" to "{dest}"')
 @when(u'I create a symlink from "{source}" to "{dest}"')

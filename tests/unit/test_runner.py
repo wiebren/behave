@@ -3,487 +3,16 @@
 
 from __future__ import absolute_import, print_function, with_statement
 from collections import defaultdict
-from platform import python_implementation
 import os.path
 import sys
-import warnings
-import tempfile
 import unittest
-import six
 from six import StringIO
 import pytest
 from mock import Mock, patch
 from behave import runner_util
-from behave.model import Table
-from behave.step_registry import StepRegistry
-from behave import parser, runner
-from behave.runner import ContextMode
+from behave.runner import Context, Runner
 from behave.exception import ConfigError
 from behave.formatter.base import StreamOpener
-
-
-# -- CONVENIENCE-ALIAS:
-_text = six.text_type
-
-
-class TestContext(unittest.TestCase):
-    # pylint: disable=invalid-name, protected-access, no-self-use
-
-    def setUp(self):
-        r = Mock()
-        self.config = r.config = Mock()
-        r.config.verbose = False
-        self.context = runner.Context(r)
-
-    def test_user_mode_shall_restore_behave_mode(self):
-        # -- CASE: No exception is raised.
-        initial_mode = ContextMode.BEHAVE
-        assert self.context._mode == initial_mode
-        with self.context.use_with_user_mode():
-            assert self.context._mode == ContextMode.USER
-            self.context.thing = "stuff"
-        assert self.context._mode == initial_mode
-
-    def test_user_mode_shall_restore_behave_mode_if_assert_fails(self):
-        initial_mode = ContextMode.BEHAVE
-        assert self.context._mode == initial_mode
-        try:
-            with self.context.use_with_user_mode():
-                assert self.context._mode == ContextMode.USER
-                assert False, "XFAIL"
-        except AssertionError:
-            assert self.context._mode == initial_mode
-
-    def test_user_mode_shall_restore_behave_mode_if_exception_is_raised(self):
-        initial_mode = ContextMode.BEHAVE
-        assert self.context._mode == initial_mode
-        try:
-            with self.context.use_with_user_mode():
-                assert self.context._mode == ContextMode.USER
-                raise RuntimeError("XFAIL")
-        except RuntimeError:
-            assert self.context._mode == initial_mode
-
-    def test_use_with_user_mode__shall_restore_initial_mode(self):
-        # -- CASE: No exception is raised.
-        # pylint: disable=protected-access
-        initial_mode = ContextMode.BEHAVE
-        self.context._mode = initial_mode
-        with self.context.use_with_user_mode():
-            assert self.context._mode == ContextMode.USER
-            self.context.thing = "stuff"
-        assert self.context._mode == initial_mode
-
-    def test_use_with_user_mode__shall_restore_initial_mode_with_error(self):
-        # -- CASE: Exception is raised.
-        # pylint: disable=protected-access
-        initial_mode = ContextMode.BEHAVE
-        self.context._mode = initial_mode
-        try:
-            with self.context.use_with_user_mode():
-                assert self.context._mode == ContextMode.USER
-                raise RuntimeError("XFAIL")
-        except RuntimeError:
-            assert self.context._mode == initial_mode
-
-    def test_use_with_behave_mode__shall_restore_initial_mode(self):
-        # -- CASE: No exception is raised.
-        # pylint: disable=protected-access
-        initial_mode = ContextMode.USER
-        self.context._mode = initial_mode
-        with self.context._use_with_behave_mode():
-            assert self.context._mode == ContextMode.BEHAVE
-            self.context.thing = "stuff"
-        assert self.context._mode == initial_mode
-
-    def test_use_with_behave_mode__shall_restore_initial_mode_with_error(self):
-        # -- CASE: Exception is raised.
-        # pylint: disable=protected-access
-        initial_mode = ContextMode.USER
-        self.context._mode = initial_mode
-        try:
-            with self.context._use_with_behave_mode():
-                assert self.context._mode == ContextMode.BEHAVE
-                raise RuntimeError("XFAIL")
-        except RuntimeError:
-            assert self.context._mode == initial_mode
-
-    def test_context_contains(self):
-        assert "thing" not in self.context
-        self.context.thing = "stuff"
-        assert "thing" in self.context
-        self.context._push()
-        assert "thing" in self.context
-
-    def test_attribute_set_at_upper_level_visible_at_lower_level(self):
-        self.context.thing = "stuff"
-        self.context._push()
-        assert self.context.thing == "stuff"
-
-    def test_attribute_set_at_lower_level_not_visible_at_upper_level(self):
-        self.context._push()
-        self.context.thing = "stuff"
-        self.context._pop()
-        assert getattr(self.context, "thing", None) is None
-
-    def test_attributes_set_at_upper_level_visible_at_lower_level(self):
-        self.context.thing = "stuff"
-        self.context._push()
-        assert self.context.thing == "stuff"
-        self.context.other_thing = "more stuff"
-        self.context._push()
-        assert self.context.thing == "stuff"
-        assert self.context.other_thing == "more stuff"
-        self.context.third_thing = "wombats"
-        self.context._push()
-        assert self.context.thing == "stuff"
-        assert self.context.other_thing == "more stuff"
-        assert self.context.third_thing == "wombats"
-
-    def test_attributes_set_at_lower_level_not_visible_at_upper_level(self):
-        self.context.thing = "stuff"
-
-        self.context._push()
-        self.context.other_thing = "more stuff"
-
-        self.context._push()
-        self.context.third_thing = "wombats"
-        assert self.context.thing == "stuff"
-        assert self.context.other_thing == "more stuff"
-        assert self.context.third_thing == "wombats"
-
-        self.context._pop()
-        assert self.context.thing == "stuff"
-        assert self.context.other_thing == "more stuff"
-        assert getattr(self.context, "third_thing", None) is None, "%s is not None" % self.context.third_thing
-
-        self.context._pop()
-        assert self.context.thing == "stuff"
-        assert getattr(self.context, "other_thing", None) is None, "%s is not None" % self.context.other_thing
-        assert getattr(self.context, "third_thing", None) is None, "%s is not None" % self.context.third_thing
-
-    def test_masking_existing_user_attribute_when_verbose_causes_warning(self):
-        warns = []
-
-        def catch_warning(*args, **kwargs):
-            warns.append(args[0])
-
-        old_showwarning = warnings.showwarning
-        warnings.showwarning = catch_warning
-
-        # pylint: disable=protected-access
-        self.config.verbose = True
-        with self.context.use_with_user_mode():
-            self.context.thing = "stuff"
-            self.context._push()
-            self.context.thing = "other stuff"
-
-        warnings.showwarning = old_showwarning
-
-        print(repr(warns))
-        assert warns, "warns is empty!"
-        warning = warns[0]
-        assert isinstance(warning, runner.ContextMaskWarning), "warning is not a ContextMaskWarning"
-        info = warning.args[0]
-        assert info.startswith("user code"), "%r doesn't start with 'user code'" % info
-        assert "'thing'" in info, "%r not in %r" % ("'thing'", info)
-        assert "tutorial" in info, '"tutorial" not in %r' % (info, )
-
-    def test_masking_existing_user_attribute_when_not_verbose_causes_no_warning(self):
-        warns = []
-
-        def catch_warning(*args, **kwargs):
-            warns.append(args[0])
-
-        old_showwarning = warnings.showwarning
-        warnings.showwarning = catch_warning
-
-        # explicit
-        # pylint: disable=protected-access
-        self.config.verbose = False
-        with self.context.use_with_user_mode():
-            self.context.thing = "stuff"
-            self.context._push()
-            self.context.thing = "other stuff"
-
-        warnings.showwarning = old_showwarning
-
-        assert not warns
-
-    def test_behave_masking_user_attribute_causes_warning(self):
-        warns = []
-
-        def catch_warning(*args, **kwargs):
-            warns.append(args[0])
-
-        old_showwarning = warnings.showwarning
-        warnings.showwarning = catch_warning
-
-        with self.context.use_with_user_mode():
-            self.context.thing = "stuff"
-        # pylint: disable=protected-access
-        self.context._push()
-        self.context.thing = "other stuff"
-
-        warnings.showwarning = old_showwarning
-
-        print(repr(warns))
-        assert warns, "OOPS: warns is empty, but expected non-empty"
-        warning = warns[0]
-        assert isinstance(warning, runner.ContextMaskWarning), "warning is not a ContextMaskWarning"
-        info = warning.args[0]
-        assert info.startswith("behave runner"), "%r doesn't start with 'behave runner'" % info
-        assert "'thing'" in info, "%r not in %r" % ("'thing'", info)
-        filename = __file__.rsplit(".", 1)[0]
-        if python_implementation() == "Jython":
-            filename = filename.replace("$py", ".py")
-        assert filename in info, "%r not in %r" % (filename, info)
-
-    def test_setting_root_attribute_that_masks_existing_causes_warning(self):
-        # pylint: disable=protected-access
-        warns = []
-
-        def catch_warning(*args, **kwargs):
-            warns.append(args[0])
-
-        old_showwarning = warnings.showwarning
-        warnings.showwarning = catch_warning
-
-        with self.context.use_with_user_mode():
-            self.context._push()
-            self.context.thing = "teak"
-        self.context._set_root_attribute("thing", "oak")
-
-        warnings.showwarning = old_showwarning
-
-        print(repr(warns))
-        assert warns
-        warning = warns[0]
-        assert isinstance(warning, runner.ContextMaskWarning)
-        info = warning.args[0]
-        assert info.startswith("behave runner"), "%r doesn't start with 'behave runner'" % info
-        assert "'thing'" in info, "%r not in %r" % ("'thing'", info)
-        filename = __file__.rsplit(".", 1)[0]
-        if python_implementation() == "Jython":
-            filename = filename.replace("$py", ".py")
-        assert filename in info, "%r not in %r" % (filename, info)
-
-    def test_context_deletable(self):
-        assert "thing" not in self.context
-        self.context.thing = "stuff"
-        assert "thing" in self.context
-        del self.context.thing
-        assert "thing" not in self.context
-
-    # OLD: @raises(AttributeError)
-    def test_context_deletable_raises(self):
-        # pylint: disable=protected-access
-        assert "thing" not in self.context
-        self.context.thing = "stuff"
-        assert "thing" in self.context
-        self.context._push()
-        assert "thing" in self.context
-        with pytest.raises(AttributeError):
-            del self.context.thing
-
-
-class ExampleSteps(object):
-    text = None
-    table = None
-
-    @staticmethod
-    def step_passes(context):   # pylint: disable=unused-argument
-        pass
-
-    @staticmethod
-    def step_fails(context):    # pylint: disable=unused-argument
-        assert False, "XFAIL"
-
-    @classmethod
-    def step_with_text(cls, context):
-        assert context.text is not None, "REQUIRE: multi-line text"
-        cls.text = context.text
-
-    @classmethod
-    def step_with_table(cls, context):
-        assert context.table, "REQUIRE: table"
-        cls.table = context.table
-
-    @classmethod
-    def register_steps_with(cls, step_registry):
-        # pylint: disable=bad-whitespace
-        step_definitions = [
-            ("step", "a step passes", cls.step_passes),
-            ("step", "a step fails",  cls.step_fails),
-            ("step", "a step with text",     cls.step_with_text),
-            ("step", "a step with a table",  cls.step_with_table),
-        ]
-        for keyword, pattern, func in step_definitions:
-            step_registry.add_step_definition(keyword, pattern, func)
-
-
-class TestContext_ExecuteSteps(unittest.TestCase):
-    """
-    Test the behave.runner.Context.execute_steps() functionality.
-    """
-    # pylint: disable=invalid-name, no-self-use
-    step_registry = None
-
-    def setUp(self):
-        if not self.step_registry:
-            # -- SETUP ONCE:
-            self.step_registry = StepRegistry()
-            ExampleSteps.register_steps_with(self.step_registry)
-        ExampleSteps.text = None
-        ExampleSteps.table = None
-
-        runner_ = Mock()
-        self.config = runner_.config = Mock()
-        runner_.config.verbose = False
-        runner_.config.stdout_capture = False
-        runner_.config.stderr_capture = False
-        runner_.config.log_capture = False
-        runner_.config.logging_format = None
-        runner_.config.logging_datefmt = None
-        runner_.step_registry = self.step_registry
-
-        self.context = runner.Context(runner_)
-        runner_.context = self.context
-        self.context.feature = Mock()
-        self.context.feature.parser = parser.Parser()
-        self.context.runner = runner_
-        # self.context.text = None
-        # self.context.table = None
-
-    def test_execute_steps_with_simple_steps(self):
-        doc = u"""
-Given a step passes
-Then a step passes
-""".lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            result = self.context.execute_steps(doc)
-            assert result is True
-
-    def test_execute_steps_with_failing_step(self):
-        doc = u"""
-Given a step passes
-When a step fails
-Then a step passes
-""".lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            try:
-                result = self.context.execute_steps(doc)
-            except AssertionError as e:
-                assert "FAILED SUB-STEP: When a step fails" in _text(e)
-
-    def test_execute_steps_with_undefined_step(self):
-        doc = u"""
-Given a step passes
-When a step is undefined
-Then a step passes
-""".lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            try:
-                result = self.context.execute_steps(doc)
-            except AssertionError as e:
-                assert "UNDEFINED SUB-STEP: When a step is undefined" in _text(e)
-
-    def test_execute_steps_with_text(self):
-        doc = u'''
-Given a step passes
-When a step with text:
-    """
-    Lorem ipsum
-    Ipsum lorem
-    """
-Then a step passes
-'''.lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            result = self.context.execute_steps(doc)
-            expected_text = "Lorem ipsum\nIpsum lorem"
-            assert result is True
-            assert expected_text == ExampleSteps.text
-
-    def test_execute_steps_with_table(self):
-        doc = u"""
-Given a step with a table:
-    | Name  | Age |
-    | Alice |  12 |
-    | Bob   |  23 |
-Then a step passes
-""".lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            # pylint: disable=bad-whitespace, bad-continuation
-            result = self.context.execute_steps(doc)
-            expected_table = Table([u"Name", u"Age"], 0, [
-                    [u"Alice", u"12"],
-                    [u"Bob",   u"23"],
-            ])
-            assert result is True
-            assert expected_table == ExampleSteps.table
-
-    def test_context_table_is_restored_after_execute_steps_without_table(self):
-        doc = u"""
-Given a step passes
-Then a step passes
-""".lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            original_table = "<ORIGINAL_TABLE>"
-            self.context.table = original_table
-            self.context.execute_steps(doc)
-            assert self.context.table == original_table
-
-    def test_context_table_is_restored_after_execute_steps_with_table(self):
-        doc = u"""
-Given a step with a table:
-    | Name  | Age |
-    | Alice |  12 |
-    | Bob   |  23 |
-Then a step passes
-""".lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            original_table = "<ORIGINAL_TABLE>"
-            self.context.table = original_table
-            self.context.execute_steps(doc)
-            assert self.context.table == original_table
-
-    def test_context_text_is_restored_after_execute_steps_without_text(self):
-        doc = u"""
-Given a step passes
-Then a step passes
-""".lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            original_text = "<ORIGINAL_TEXT>"
-            self.context.text = original_text
-            self.context.execute_steps(doc)
-            assert self.context.text == original_text
-
-    def test_context_text_is_restored_after_execute_steps_with_text(self):
-        doc = u'''
-Given a step passes
-When a step with text:
-    """
-    Lorem ipsum
-    Ipsum lorem
-    """
-'''.lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            original_text = "<ORIGINAL_TEXT>"
-            self.context.text = original_text
-            self.context.execute_steps(doc)
-            assert self.context.text == original_text
-
-
-    # OLD: @raises(ValueError)
-    def test_execute_steps_should_fail_when_called_without_feature(self):
-        doc = u"""
-Given a passes
-Then a step passes
-""".lstrip()
-        with patch("behave.step_registry.registry", self.step_registry):
-            self.context.feature = None
-            with pytest.raises(ValueError):
-                self.context.execute_steps(doc)
 
 
 def create_mock_config():
@@ -503,179 +32,201 @@ class TestRunner(object):
                 base_dir = "fake/path"
                 hooks_path = os.path.join(base_dir, "environment.py")
 
-                r = runner.Runner(create_mock_config())
-                r.base_dir = base_dir
-                r.load_hooks()
+                runner = Runner(create_mock_config())
+                runner.base_dir = base_dir
+                runner.load_hooks()
 
                 exists.assert_called_with(hooks_path)
-                ef.assert_called_with(hooks_path, r.hooks)
+                ef.assert_called_with(hooks_path, runner.hooks)
 
     def test_run_hook_runs_a_hook_that_exists(self):
         config = Mock()
-        r = runner.Runner(config)
-        # XXX r.config = Mock()
-        r.config.stdout_capture = False
-        r.config.stderr_capture = False
-        r.config.dry_run = False
-        r.hooks["before_lunch"] = hook = Mock()
-        args = (runner.Context(Mock()), Mock(), Mock())
-        r.run_hook("before_lunch", *args)
+        runner = Runner(config)
+        context = Context(runner)
+        runner.config.capture = False
+        runner.config.capture_stdout = False
+        runner.config.capture_stderr = False
+        runner.config.capture_log = False
+        runner.config.dry_run = False
+        hook = Mock()
+        runner.hooks["before_lunch"] = hook
+        statement = Mock()
+        statement.error_message = ""
 
-        hook.assert_called_with(*args)
+        runner.context = context
+        runner.run_hook("before_lunch", statement)
+        call_args = (context, statement)
+        hook.assert_called_with(*call_args)
 
     def test_run_hook_does_not_runs_a_hook_that_exists_if_dry_run(self):
-        r = runner.Runner(None)
-        r.config = Mock()
-        r.config.dry_run = True
-        r.hooks["before_lunch"] = hook = Mock()
-        args = (runner.Context(Mock()), Mock(), Mock())
-        r.run_hook("before_lunch", *args)
+        config = Mock()
+        config.dry_run = True
+        hook = Mock()
+        runner = Runner(config=config)
+        runner.hooks["before_lunch"] = hook
 
+        statement = Mock()
+        runner.run_hook("before_lunch", statement)
         assert len(hook.call_args_list) == 0
 
     def test_setup_capture_creates_stringio_for_stdout(self):
-        r = runner.Runner(Mock())
-        r.config.stdout_capture = True
-        r.config.log_capture = False
-        r.context = Mock()
+        runner = Runner(Mock())
+        runner.config.capture_stdout = True
+        runner.config.capture_log = False
+        runner.context = Mock()
 
-        r.setup_capture()
+        runner.setup_capture()
 
-        assert r.capture_controller.stdout_capture is not None
-        assert isinstance(r.capture_controller.stdout_capture, StringIO)
+        assert runner.capture_controller.capture_stdout is not None
+        assert isinstance(runner.capture_controller.capture_stdout, StringIO)
 
     def test_setup_capture_does_not_create_stringio_if_not_wanted(self):
-        r = runner.Runner(Mock())
-        r.config.stdout_capture = False
-        r.config.stderr_capture = False
-        r.config.log_capture = False
+        runner = Runner(Mock())
+        runner.config.capture_stdout = False
+        runner.config.capture_stderr = False
+        runner.config.capture_log = False
 
-        r.setup_capture()
+        runner.setup_capture()
 
-        assert r.capture_controller.stdout_capture is None
+        assert runner.capture_controller.capture_stdout is None
 
     @patch("behave.capture.LoggingCapture")
     def test_setup_capture_creates_memory_handler_for_logging(self, handler):
-        r = runner.Runner(Mock())
-        r.config.stdout_capture = False
-        r.config.log_capture = True
-        r.context = Mock()
+        runner = Runner(Mock())
+        runner.config.capture_stdout = False
+        runner.config.capture_log = True
+        runner.context = Mock()
 
-        r.setup_capture()
+        runner.setup_capture()
 
-        assert r.capture_controller.log_capture is not None
-        handler.assert_called_with(r.config)
-        r.capture_controller.log_capture.inveigle.assert_called_with()
+        assert runner.capture_controller.capture_log is not None
+        handler.assert_called_with(runner.config)
+        runner.capture_controller.capture_log.inveigle.assert_called_with()
 
     def test_setup_capture_does_not_create_memory_handler_if_not_wanted(self):
-        r = runner.Runner(Mock())
-        r.config.stdout_capture = False
-        r.config.stderr_capture = False
-        r.config.log_capture = False
+        runner = Runner(Mock())
+        runner.config.capture_stdout = False
+        runner.config.capture_stderr = False
+        runner.config.capture_log = False
 
-        r.setup_capture()
+        runner.setup_capture()
 
-        assert r.capture_controller.log_capture is None
+        assert runner.capture_controller.capture_log is None
 
     def test_start_stop_capture_switcheroos_sys_stdout(self):
         old_stdout = sys.stdout
         sys.stdout = new_stdout = Mock()
 
-        r = runner.Runner(Mock())
-        r.config.stdout_capture = True
-        r.config.log_capture = False
-        r.context = Mock()
+        runner = Runner(Mock())
+        runner.config.capture_stdout = True
+        runner.config.capture_log = False
+        runner.context = Mock()
 
-        r.setup_capture()
-        r.start_capture()
+        runner.setup_capture()
+        runner.start_capture()
 
-        assert sys.stdout == r.capture_controller.stdout_capture
+        assert sys.stdout == runner.capture_controller.capture_stdout
 
-        r.stop_capture()
+        runner.stop_capture()
 
         assert sys.stdout == new_stdout
 
         sys.stdout = old_stdout
 
     def test_start_stop_capture_leaves_sys_stdout_alone_if_off(self):
-        r = runner.Runner(Mock())
-        r.config.stdout_capture = False
-        r.config.log_capture = False
+        runner = Runner(Mock())
+        runner.config.capture_stdout = False
+        runner.config.capture_log = False
 
         old_stdout = sys.stdout
 
-        r.start_capture()
+        runner.start_capture()
 
         assert sys.stdout == old_stdout
 
-        r.stop_capture()
+        runner.stop_capture()
 
         assert sys.stdout == old_stdout
 
     def test_teardown_capture_removes_log_tap(self):
-        r = runner.Runner(Mock())
-        r.config.stdout_capture = False
-        r.config.log_capture = True
+        runner = Runner(Mock())
+        runner.config.capture_stdout = False
+        runner.config.capture_log = True
 
-        r.capture_controller.log_capture = Mock()
+        runner.capture_controller.capture_log = Mock()
 
-        r.teardown_capture()
+        runner.teardown_capture()
 
-        r.capture_controller.log_capture.abandon.assert_called_with()
+        runner.capture_controller.capture_log.abandon.assert_called_with()
 
-    def test_exec_file(self):
-        fn = tempfile.mktemp()
-        with open(fn, "w") as f:
+    def test_exec_file(self, tmp_path):
+        filename = str(tmp_path/"example.py")
+        with open(filename, "w") as f:
             f.write("spam = __file__\n")
-        g = {}
-        l = {}
-        runner_util.exec_file(fn, g, l)
-        assert "__file__" in l
+        my_globals = {}
+        my_locals = {}
+        runner_util.exec_file(filename, my_globals, my_locals)
+        assert "__file__" in my_locals
         # pylint: disable=too-many-format-args
-        assert "spam" in l, '"spam" variable not set in locals (%r)' % (g, l)
+        assert "spam" in my_locals, '"spam" variable not set in locals (%r)' % my_locals
         # pylint: enable=too-many-format-args
-        assert l["spam"] == fn
+        assert my_locals["spam"] == filename
 
     def test_run_returns_true_if_everything_passed(self):
-        r = runner.Runner(Mock())
-        r.setup_capture = Mock()
-        r.setup_paths = Mock()
-        r.run_with_paths = Mock()
-        r.run_with_paths.return_value = True
-        assert r.run()
+        runner = Runner(Mock())
+        runner.setup_capture = Mock()
+        runner.setup_paths = Mock()
+        runner.run_with_paths = Mock()
+        runner.run_with_paths.return_value = True
+        assert runner.run()
 
     def test_run_returns_false_if_anything_failed(self):
-        r = runner.Runner(Mock())
-        r.setup_capture = Mock()
-        r.setup_paths = Mock()
-        r.run_with_paths = Mock()
-        r.run_with_paths.return_value = False
-        assert not r.run()
+        runner = Runner(Mock())
+        runner.setup_capture = Mock()
+        runner.setup_paths = Mock()
+        runner.run_with_paths = Mock()
+        runner.run_with_paths.return_value = False
+        assert not runner.run()
 
 
 class TestRunWithPaths(unittest.TestCase):
     # pylint: disable=invalid-name, no-self-use
 
     def setUp(self):
-        self.config = Mock()
-        self.config.reporters = []
-        self.config.logging_level = None
-        self.config.logging_filter = None
-        self.config.outputs = [Mock(), StreamOpener(stream=sys.stdout)]
-        self.config.format = ["plain", "progress"]
-        self.config.logging_format = None
-        self.config.logging_datefmt = None
-        self.runner = runner.Runner(self.config)
-        self.load_hooks = self.runner.load_hooks = Mock()
-        self.load_step_definitions = self.runner.load_step_definitions = Mock()
-        self.run_hook = self.runner.run_hook = Mock()
-        self.run_step = self.runner.run_step = Mock()
-        self.feature_locations = self.runner.feature_locations = Mock()
-        self.calculate_summaries = self.runner.calculate_summaries = Mock()
+        config = Mock()
+        config.reporters = []
+        config.should_capture_hooks = Mock()
+        config.should_capture_hooks.return_value = False
+        config.logging_level = None
+        config.logging_filter = None
+        config.outputs = [Mock(), StreamOpener(stream=sys.stdout)]
+        config.format = ["plain", "progress"]
+        config.logging_format = None
+        config.logging_datefmt = None
+        config.environment_file = "environment.py"
+        runner = Runner(config)
+        runner.base_dir = "."
 
+        def __run_hooks_with_capture(hook_name, *args, **kwargs):
+            return runner.run_hook(hook_name, *args)
+
+        runner.run_hook = Mock()
+        runner.run_hook_with_capture = __run_hooks_with_capture
+        runner.run_step = Mock()
+        runner.load_hooks = Mock()
+        runner.feature_locations = Mock()
+        runner.calculate_summaries = Mock()
+
+        self.config = config
+        self.runner = runner
+        self.load_hooks = runner.load_hooks
+        self.load_step_definitions = runner.load_step_definitions = Mock()
+        self.feature_locations = runner.feature_locations
+
+        self.formatter = Mock()
         self.formatter_class = patch("behave.formatter.pretty.PrettyFormatter")
         formatter_class = self.formatter_class.start()
-        formatter_class.return_value = self.formatter = Mock()
+        formatter_class.return_value = self.formatter
 
     def tearDown(self):
         self.formatter_class.stop()
@@ -690,15 +241,17 @@ class TestRunWithPaths(unittest.TestCase):
     def test_runs_before_all_and_after_all_hooks(self):
         # Make runner.feature_locations() and runner.run_hook() the same mock so
         # we can make sure things happen in the right order.
-        self.runner.feature_locations = self.run_hook
-        self.runner.feature_locations.return_value = []
-        self.runner.context = Mock()
-        self.runner.run_with_paths()
+        # self.runner.feature_locations = self.run_hook
+        runner = self.runner
+        runner.feature_locations = Mock()
+        runner.feature_locations.return_value = []
+        runner.config.environment_file = "environment.py"
+        runner.context = Context(self.runner)
+        runner.run_with_paths()
 
-        assert self.run_hook.call_args_list == [
-            ((), {}),
-            (("before_all", self.runner.context), {}),
-            (("after_all", self.runner.context), {}),
+        assert runner.run_hook.call_args_list == [
+            (("before_all",), {}),
+            (("after_all",), {}),
         ]
 
     @patch("behave.parser.parse_file")
@@ -824,15 +377,15 @@ class TestFeatureDirectory(object):
         config = create_mock_config()
         config.paths = []
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock()
 
         # will look for a "features" directory and not find one
         with patch("os.path", fs):
             with pytest.raises(ConfigError):
-                r.setup_paths()
-            # OLD: assert_raises(ConfigError, r.setup_paths)
+                runner.setup_paths()
+            # OLD: assert_raises(ConfigError, runner.setup_paths)
 
         assert ("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls
         # ok_(("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls)
@@ -841,96 +394,96 @@ class TestFeatureDirectory(object):
         config = create_mock_config()
         config.paths = []
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock("features/steps/")
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
                 with pytest.raises(ConfigError):
-                    r.setup_paths()
-                # OLD: assert_raises(ConfigError, r.setup_paths)
+                    runner.setup_paths()
+                # OLD: assert_raises(ConfigError, runner.setup_paths)
 
     def test_default_path(self):
         config = create_mock_config()
         config.paths = []
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock("features/steps/", "features/foo.feature")
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
-                    r.setup_paths()
+                with runner.path_manager:
+                    runner.setup_paths()
 
-        assert r.base_dir == os.path.abspath("features")
+        assert runner.base_dir == os.path.abspath("features")
 
     def test_supplied_feature_file(self):
         config = create_mock_config()
         config.paths = ["foo.feature"]
         config.verbose = True
-        r = runner.Runner(config)
-        r.context = Mock()
+        runner = Runner(config)
+        runner.context = Mock()
 
         fs = FsMock("steps/", "foo.feature")
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
-                    r.setup_paths()
+                with runner.path_manager:
+                    runner.setup_paths()
         assert ("isdir", os.path.join(fs.base, "steps")) in fs.calls
         assert ("isfile", os.path.join(fs.base, "foo.feature")) in fs.calls
         # OLD: ok_(("isdir", os.path.join(fs.base, "steps")) in fs.calls)
         # OLD: ok_(("isfile", os.path.join(fs.base, "foo.feature")) in fs.calls)
 
-        assert r.base_dir == fs.base
+        assert runner.base_dir == fs.base
 
     def test_supplied_feature_file_no_steps(self):
         config = create_mock_config()
         config.paths = ["foo.feature"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock("foo.feature")
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
+                with runner.path_manager:
                     with pytest.raises(ConfigError):
-                        r.setup_paths()
-                    # OLD: assert_raises(ConfigError, r.setup_paths)
+                        runner.setup_paths()
+                    # OLD: assert_raises(ConfigError, runner.setup_paths)
 
     def test_supplied_feature_directory(self):
         config = create_mock_config()
         config.paths = ["spam"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock("spam/", "spam/steps/", "spam/foo.feature")
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
-                    r.setup_paths()
+                with runner.path_manager:
+                    runner.setup_paths()
 
         assert ("isdir", os.path.join(fs.base, "spam", "steps")) in fs.calls
         # OLD ok_(("isdir", os.path.join(fs.base, "spam", "steps")) in fs.calls)
 
-        assert r.base_dir == os.path.join(fs.base, "spam")
+        assert runner.base_dir == os.path.join(fs.base, "spam")
 
     def test_supplied_feature_directory_no_steps(self):
         config = create_mock_config()
         config.paths = ["spam"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock("spam/", "spam/foo.feature")
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
                 with pytest.raises(ConfigError):
-                    r.setup_paths()
-                # OLD: assert_raises(ConfigError, r.setup_paths)
+                    runner.setup_paths()
+                # OLD: assert_raises(ConfigError, runner.setup_paths)
 
         assert ("isdir", os.path.join(fs.base, "spam", "steps")) in fs.calls
         # OLD: ok_(("isdir", os.path.join(fs.base, "spam", "steps")) in fs.calls)
@@ -939,15 +492,15 @@ class TestFeatureDirectory(object):
         config = create_mock_config()
         config.paths = ["spam"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock()
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
                 with pytest.raises(ConfigError):
-                    r.setup_paths()
-                # OLD: assert_raises(ConfigError, r.setup_paths)
+                    runner.setup_paths()
+                # OLD: assert_raises(ConfigError, runner.setup_paths)
 
 
 class TestFeatureDirectoryLayout2(object):
@@ -957,7 +510,7 @@ class TestFeatureDirectoryLayout2(object):
         config = create_mock_config()
         config.paths = []
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock(
             "features/",
@@ -968,16 +521,16 @@ class TestFeatureDirectoryLayout2(object):
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
-                    r.setup_paths()
+                with runner.path_manager:
+                    runner.setup_paths()
 
-        assert r.base_dir == os.path.abspath("features")
+        assert runner.base_dir == os.path.abspath("features")
 
     def test_supplied_root_directory(self):
         config = create_mock_config()
         config.paths = ["features"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock(
             "features/",
@@ -988,18 +541,18 @@ class TestFeatureDirectoryLayout2(object):
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
-                    r.setup_paths()
+                with runner.path_manager:
+                    runner.setup_paths()
 
         # OLD: ok_(("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls)
         assert ("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls
-        assert r.base_dir == os.path.join(fs.base, "features")
+        assert runner.base_dir == os.path.join(fs.base, "features")
 
     def test_supplied_root_directory_no_steps(self):
         config = create_mock_config()
         config.paths = ["features"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock(
             "features/",
@@ -1009,22 +562,22 @@ class TestFeatureDirectoryLayout2(object):
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
+                with runner.path_manager:
                     with pytest.raises(ConfigError):
-                        r.setup_paths()
-                    # OLD: assert_raises(ConfigError, r.setup_paths)
+                        runner.setup_paths()
+                    # OLD: assert_raises(ConfigError, runner.setup_paths)
 
         # OLD: ok_(("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls)
         assert ("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls
-        assert r.base_dir is None
+        assert runner.base_dir is None
 
 
     def test_supplied_feature_file(self):
         config = create_mock_config()
         config.paths = ["features/group1/foo.feature"]
         config.verbose = True
-        r = runner.Runner(config)
-        r.context = Mock()
+        runner = Runner(config)
+        runner.context = Mock()
 
         fs = FsMock(
             "features/",
@@ -1035,20 +588,18 @@ class TestFeatureDirectoryLayout2(object):
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
-                    r.setup_paths()
+                with runner.path_manager:
+                    runner.setup_paths()
 
-        # OLD: ok_(("isdir", os.path.join(fs.base, "features", "steps"))  in fs.calls)
-        # OLD: ok_(("isfile", os.path.join(fs.base, "features", "group1", "foo.feature")) in fs.calls)
         assert ("isdir", os.path.join(fs.base, "features", "steps"))  in fs.calls
         assert ("isfile", os.path.join(fs.base, "features", "group1", "foo.feature")) in fs.calls
-        assert r.base_dir == fs.join(fs.base, "features")
+        assert runner.base_dir == fs.join(fs.base, "features")
 
     def test_supplied_feature_file_no_steps(self):
         config = create_mock_config()
         config.paths = ["features/group1/foo.feature"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock(
             "features/",
@@ -1058,16 +609,16 @@ class TestFeatureDirectoryLayout2(object):
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
+                with runner.path_manager:
                     with pytest.raises(ConfigError):
-                        r.setup_paths()
-                    # OLD assert_raises(ConfigError, r.setup_paths)
+                        runner.setup_paths()
+                    # OLD assert_raises(ConfigError, runner.setup_paths)
 
     def test_supplied_feature_directory(self):
         config = create_mock_config()
         config.paths = ["features/group1"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock(
             "features/",
@@ -1078,19 +629,19 @@ class TestFeatureDirectoryLayout2(object):
 
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
-                with r.path_manager:
-                    r.setup_paths()
+                with runner.path_manager:
+                    runner.setup_paths()
 
         # OLD: ok_(("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls)
         assert ("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls
-        assert r.base_dir == os.path.join(fs.base, "features")
+        assert runner.base_dir == os.path.join(fs.base, "features")
 
 
     def test_supplied_feature_directory_no_steps(self):
         config = create_mock_config()
         config.paths = ["features/group1"]
         config.verbose = True
-        r = runner.Runner(config)
+        runner = Runner(config)
 
         fs = FsMock(
             "features/",
@@ -1101,8 +652,8 @@ class TestFeatureDirectoryLayout2(object):
         with patch("os.path", fs):
             with patch("os.walk", fs.walk):
                 with pytest.raises(ConfigError):
-                    r.setup_paths()
-                # OLD: assert_raises(ConfigError, r.setup_paths)
+                    runner.setup_paths()
+                # OLD: assert_raises(ConfigError, runner.setup_paths)
 
         # OLD: ok_(("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls)
         assert ("isdir", os.path.join(fs.base, "features", "steps")) in fs.calls

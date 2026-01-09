@@ -5,13 +5,13 @@ This module provides `JSON`_ formatters for :mod:`behave`:
 * json: Generates compact JSON output
 * json.pretty: Generates readable JSON output
 
-.. _JSON: http://json.org
+.. _JSON: https://json.org
 """
 
 from __future__ import absolute_import
 import base64
 from behave.formatter.base import Formatter
-from behave.model_core import Status
+from behave.model_type import Status
 import six
 try:
     import json
@@ -126,7 +126,8 @@ class JSONFormatter(Formatter):
 
     def match(self, match):
         args = []
-        for argument in match.arguments:
+        matched_arguments = match.arguments or []
+        for argument in matched_arguments:
             argument_value = argument.value
             if not isinstance(argument_value, self.json_scalar_types):
                 # -- OOPS: Avoid invalid JSON format w/ custom types.

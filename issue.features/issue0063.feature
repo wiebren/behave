@@ -49,11 +49,11 @@ Feature: Issue #63: 'ScenarioOutline' object has no attribute 'stdout'
             |Alice|
             |Bob  |
       """
-    When I run "behave -c --junit features/issue63_case1.feature"
+    When I run "behave --no-color --junit features/issue63_case1.feature"
     Then it should pass with:
       """
       2 scenarios passed, 0 failed, 0 skipped
-      6 steps passed, 0 failed, 0 skipped, 0 undefined
+      6 steps passed, 0 failed, 0 skipped
       """
     But the command output should not contain:
       """
@@ -74,11 +74,11 @@ Feature: Issue #63: 'ScenarioOutline' object has no attribute 'stdout'
             |Alice|
             |Bob  |
       """
-    When I run "behave -c --junit features/issue63_case2.feature"
+    When I run "behave --no-color --junit features/issue63_case2.feature"
     Then it should fail with:
       """
       0 scenarios passed, 2 failed, 0 skipped
-      2 steps passed, 2 failed, 2 skipped, 0 undefined
+      2 steps passed, 2 failed, 2 skipped
       """
     But the command output should not contain:
       """
@@ -90,13 +90,13 @@ Feature: Issue #63: 'ScenarioOutline' object has no attribute 'stdout'
       """
     And the command output should contain:
       """
-      Captured stdout:
+      CAPTURED STDOUT: scenario
       Given1 passing: Alice;
       When1 failing: Alice;
       """
     And the command output should contain:
       """
-      Captured stderr:
+      CAPTURED STDERR: scenario
       Given2 passing: Alice;
       When2 failing: Alice;
       """

@@ -21,6 +21,7 @@ Feature: Issue #191 Using context.execute_steps() may change context.table/.text
             pass
 
         @given('I define the following nested steps')
+        @given('I define the following nested steps:')
         def step_define_nested_steps(context):
             assert context.text is not None, "REQUIRE: text"
             context.nested_steps = context.text
@@ -30,11 +31,13 @@ Feature: Issue #191 Using context.execute_steps() may change context.table/.text
         from behave import when, then, step
 
         @step('I use another table with')
+        @step('I use another table with:')
         def step_use_another_table_with(context):
             assert context.table, "REQUIRE: table"
             context.nested_table = context.table
 
         @when('I execute the nested steps and use the table')
+        @when('I execute the nested steps and use the table:')
         def step_execute_nested_steps_and_use_table(context):
             assert context.table, "REQUIRE: table"
             assert context.nested_steps, "REQUIRE: context.nested_steps"
@@ -58,11 +61,13 @@ Feature: Issue #191 Using context.execute_steps() may change context.table/.text
             context.text = text     # -- MODIFY: context.text (emulation)
 
         @step('I use another text with')
+        @step('I use another text with:')
         def step_use_another_text_with(context):
             assert context.text is not None, "REQUIRE: text"
             context.nested_text = context.text
 
         @when('I execute the nested steps and use the text')
+        @when('I execute the nested steps and use the text:')
         def step_execute_nested_steps_and_use_text(context):
             assert context.text is not None, "REQUIRE: text"
             assert context.nested_steps, "REQUIRE: context.nested_steps"
@@ -98,7 +103,7 @@ Feature: Issue #191 Using context.execute_steps() may change context.table/.text
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 0 skipped
-      3 steps passed, 0 failed, 0 skipped, 0 undefined
+      3 steps passed, 0 failed, 0 skipped
       """
 
   @nested_steps.with_table
@@ -124,7 +129,7 @@ Feature: Issue #191 Using context.execute_steps() may change context.table/.text
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 0 skipped
-      3 steps passed, 0 failed, 0 skipped, 0 undefined
+      3 steps passed, 0 failed, 0 skipped
       """
 
 
@@ -150,7 +155,7 @@ Feature: Issue #191 Using context.execute_steps() may change context.table/.text
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 0 skipped
-      3 steps passed, 0 failed, 0 skipped, 0 undefined
+      3 steps passed, 0 failed, 0 skipped
       """
 
   @nested_steps.with_text
@@ -174,5 +179,5 @@ Feature: Issue #191 Using context.execute_steps() may change context.table/.text
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 0 skipped
-      3 steps passed, 0 failed, 0 skipped, 0 undefined
+      3 steps passed, 0 failed, 0 skipped
       """

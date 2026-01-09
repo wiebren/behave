@@ -9,7 +9,7 @@ Feature: Setup logging subsystem by using a logging configfile
     Given a new working directory
     And a file named "features/steps/use_behave4cmd_steps.py" with:
         """
-        import behave4cmd0.log.steps
+        import behave4cmd0.log_steps
         import behave4cmd0.failing_steps
         import behave4cmd0.passing_steps
         """
@@ -42,7 +42,7 @@ Feature: Setup logging subsystem by using a logging configfile
     And a file named "behave.ini" with:
         """
         [behave]
-        log_capture = false
+        capture_log = false
         logging_level = DEBUG
         logging_format = LOG.%(levelname)-8s  %(name)-10s: %(message)s
         """
@@ -115,11 +115,11 @@ Feature: Setup logging subsystem by using a logging configfile
     And I use the log record configuration:
         | property | value |
         | format   | LOG.%(levelname)-8s  %(name)-10s: %(message)s |
-    When I run "behave -f plain --logcapture features/example.log_and_fail.feature"
+    When I run "behave -f plain --capture-log features/example.log_and_fail.feature"
     Then it should fail with:
         """
         0 scenarios passed, 1 failed, 0 skipped
-        1 step passed, 1 failed, 0 skipped, 0 undefined
+        1 step passed, 1 failed, 0 skipped
         """
     And the file "behave.log" should contain the log records:
         | category | level | message |

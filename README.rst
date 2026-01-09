@@ -2,29 +2,38 @@
 behave
 ======
 
-
-.. image:: https://github.com/behave/behave/actions/workflows/tests.yml/badge.svg
-    :target: https://github.com/behave/behave/actions/workflows/tests.yml
-    :alt: CI Build Status
-
-.. image:: https://readthedocs.org/projects/behave/badge/?version=latest
-    :target: http://behave.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
-
-.. image:: https://img.shields.io/pypi/v/behave.svg
+.. |badge.latest_version| image:: https://img.shields.io/pypi/v/behave.svg
     :target: https://pypi.python.org/pypi/behave
     :alt: Latest Version
 
-.. image:: https://img.shields.io/pypi/l/behave.svg
+.. |badge.license| image:: https://img.shields.io/pypi/l/behave.svg
     :target: https://pypi.python.org/pypi/behave/
     :alt: License
 
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-   :alt: Join the chat at https://gitter.im/behave/behave
-   :target: https://gitter.im/behave/behave?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |badge.CI_status| image:: https://github.com/behave/behave/actions/workflows/test.yml/badge.svg
+    :target: https://github.com/behave/behave/actions/workflows/test.yml
+    :alt: CI Build Status
+
+.. |badge.docs_status| image:: https://readthedocs.org/projects/behave/badge/?version=latest
+    :target: https://behave.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. |badge.discussions| image:: https://img.shields.io/badge/chat-github_discussions-darkgreen
+   :target: https://github.com/behave/behave/discussions
+   :alt: Discussions at https://github.com/behave/behave/discussions
+
+.. |badge.gitter| image:: https://badges.gitter.im/join_chat.svg
+   :target: https://app.gitter.im/#/room/#behave_behave:gitter.im
+   :alt: Chat at https://gitter.im/behave/behave
+
+.. |badge.gurubase| image:: https://img.shields.io/badge/Gurubase-Ask%20behave%20Guru-006BFF
+   :target: https://gurubase.io/g/behave
+   :alt: Ask behave Guru at https://gurubase.io/g/behave
 
 
 .. |logo| image:: https://raw.github.com/behave/behave/master/docs/_static/behave_logo1.png
+
+|badge.latest_version| |badge.license| |badge.CI_status| |badge.docs_status| |badge.discussions| |badge.gitter| |badge.gurubase|
 
 behave is behavior-driven development, Python style.
 
@@ -96,10 +105,10 @@ we recommend the `tutorial`_ and then the `feature testing language`_ and
 `api`_ references.
 
 
-.. _`Install *behave*.`: http://behave.readthedocs.io/en/stable/install.html
-.. _`tutorial`: http://behave.readthedocs.io/en/stable/tutorial.html#features
-.. _`feature testing language`: http://behave.readthedocs.io/en/stable/gherkin.html
-.. _`api`: http://behave.readthedocs.io/en/stable/api.html
+.. _`Install *behave*.`: https://behave.readthedocs.io/en/stable/install/
+.. _`tutorial`: https://behave.readthedocs.io/en/stable/tutorial/
+.. _`feature testing language`: https://behave.readthedocs.io/en/stable/gherkin/
+.. _`api`: https://behave.readthedocs.io/en/stable/api/
 
 
 More Information
@@ -110,10 +119,11 @@ More Information
 * `changelog`_ (latest changes)
 
 
-.. _behave documentation: http://behave.readthedocs.io/
-.. _changelog:      https://github.com/behave/behave/blob/master/CHANGES.rst
+.. _behave documentation: https://behave.readthedocs.io/
+.. _changelog:      https://github.com/behave/behave/blob/main/CHANGES.rst
 .. _behave.example: https://github.com/behave/behave.example
 
-.. _`latest edition`: http://behave.readthedocs.io/en/latest/
-.. _`stable edition`: http://behave.readthedocs.io/en/stable/
-.. _PDF:              https://media.readthedocs.org/pdf/behave/latest/behave.pdf
+.. _`latest edition`: https://behave.readthedocs.io/en/latest/
+.. _`stable edition`: https://behave.readthedocs.io/en/stable/
+.. _PDF:              https://behave.readthedocs.io/_/downloads/en/latest/pdf/
+

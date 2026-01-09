@@ -32,12 +32,12 @@ Feature: Assert with non-ASCII char causes UnicodeDecodeError
     Then it should fail with:
       """
       0 scenarios passed, 1 failed, 0 skipped
-      0 steps passed, 1 failed, 0 skipped, 0 undefined
+      0 steps passed, 1 failed, 0 skipped
       """
     And the command output should not contain "UnicodeDecodeError"
     But the command output should contain:
       """
-      Assertion Failed: FAIL:
+      ASSERT FAILED: FAIL:
       """
 
     Examples:

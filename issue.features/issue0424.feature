@@ -50,17 +50,17 @@ Feature: Issue #424 -- Unicode output problem when fails in nested steps
       Then it should fail with:
         """
         0 scenarios passed, 2 failed, 0 skipped
-        1 step passed, 2 failed, 0 skipped, 0 undefined
+        1 step passed, 2 failed, 0 skipped
         """
       And the command output should contain:
         """
         Scenario: Use step directly
           When I press the big red button ... failed
-        Assertion Failed: Ungültiger Wert
+        ASSERT FAILED: Ungültiger Wert
 
         Scenario: Use nested step
           Given another step passes ... passed
           When I call the nested step with the "red button" ... failed
-        Assertion Failed: FAILED SUB-STEP: When I press the big red button
-        Substep info: Assertion Failed: Ungültiger Wert
+        ASSERT FAILED: FAILED SUB-STEP: When I press the big red button
+        Substep info: ASSERT FAILED: Ungültiger Wert
         """

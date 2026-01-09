@@ -9,13 +9,13 @@ Feature: Issue #194: Nested steps prevent that original stdout/stderr is restore
   .   * Original streams are restored in after_scenario() hook.
   .   * Nested steps should not replace existing capture objects.
 
-  @setup
-  Scenario: Feature Setup
+  Background:
     Given a new working directory
     And a file named "behave.ini" with:
         """
         [behave]
-        log_capture = false
+        capture_log = false
+        capture_hooks = false
         logging_level  = INFO
         logging_format = LOG.%(levelname)-8s  %(name)s: %(message)s
         """
@@ -52,6 +52,7 @@ Feature: Issue #194: Nested steps prevent that original stdout/stderr is restore
             write_text_to(stream, text)
 
         @step('I execute the following steps')
+        @step('I execute the following steps:')
         def step_execute_steps(context):
             assert context.text, "REQUIRE: context.text"
             context.execute_steps(context.text)
@@ -137,12 +138,12 @@ Feature: Issue #194: Nested steps prevent that original stdout/stderr is restore
     Then it should fail with:
         """
         0 scenarios passed, 2 failed, 0 skipped
-        5 steps passed, 2 failed, 0 skipped, 0 undefined
+        5 steps passed, 2 failed, 0 skipped
         """
     And note that "the summary is only shown if hooks have no errors"
     And the command output should contain:
         """
-        Captured stdout:
+        CAPTURED STDOUT: scenario
         STDOUT:Hello Alice
         STDOUT:Hello Bob
         STDOUT:Hello nested.Alice
@@ -152,7 +153,7 @@ Feature: Issue #194: Nested steps prevent that original stdout/stderr is restore
         """
     And the command output should contain:
         """
-        Captured stdout:
+        CAPTURED STDOUT: scenario
         STDOUT:Hello Dora
         """
     And the command output should contain:
@@ -187,12 +188,12 @@ Feature: Issue #194: Nested steps prevent that original stdout/stderr is restore
     Then it should fail with:
         """
         0 scenarios passed, 2 failed, 0 skipped
-        5 steps passed, 2 failed, 0 skipped, 0 undefined
+        5 steps passed, 2 failed, 0 skipped
         """
     And note that "the summary is only shown if hooks have no errors"
     And the command output should contain:
         """
-        Captured stderr:
+        CAPTURED STDERR: scenario
         STDERR:Hello Alice
         STDERR:Hello Bob
         STDERR:Hello nested.Alice
@@ -202,7 +203,7 @@ Feature: Issue #194: Nested steps prevent that original stdout/stderr is restore
         """
     And the command output should contain:
         """
-        Captured stderr:
+        CAPTURED STDERR: scenario
         STDERR:Hello Dora
         """
     And the command output should contain:

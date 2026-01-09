@@ -33,6 +33,7 @@ Feature: User-specific Configuration Data (userdata)
         from hamcrest import assert_that, equal_to
 
         @step('the following user-data is provided')
+        @step('the following user-data is provided:')
         def step_userdata_is_provided_with_table(context):
             assert context.table, "REQUIRE: table"
             context.table.require_columns(["name", "value"])
@@ -47,6 +48,7 @@ Feature: User-specific Configuration Data (userdata)
                     assert False, "MISSING: userdata %s" % name
 
         @step('I modify the user-data with')
+        @step('I modify the user-data with:')
         def step_modify_userdata_with_table(context):
             assert context.table, "REQUIRE: table"
             context.table.require_columns(["name", "value"])
@@ -73,7 +75,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
   @userdata.define
@@ -91,7 +93,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
   @userdata.define
@@ -112,7 +114,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
   @userdata.config
@@ -127,7 +129,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
   @userdata.config
@@ -151,7 +153,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
   @userdata.config
@@ -176,7 +178,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
   @userdata.load
@@ -214,7 +216,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
   @userdata.load
@@ -233,16 +235,13 @@ Feature: User-specific Configuration Data (userdata)
         """
     And a file named "features/environment.py" with:
         """
-        try:
-            import configparser
-        except:
-            import ConfigParser as configparser   # -- PY2
+        from behave.configuration import ConfigParser
 
         def before_all(context):
             userdata = context.config.userdata
             configfile = userdata.get("configfile", "userconfig.ini")
             section = userdata.get("config_section", "behave.userdata")
-            parser = configparser.SafeConfigParser()
+            parser = ConfigParser()
             parser.read(configfile)
             if parser.has_section(section):
                 userdata.update(parser.items(section))
@@ -260,7 +259,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
   @bad_practice
@@ -299,7 +298,7 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         2 scenarios passed, 0 failed, 0 skipped
-        4 steps passed, 0 failed, 0 skipped, 0 undefined
+        4 steps passed, 0 failed, 0 skipped
         """
     But note that "modifying userdata is BAD-PRACTICE, except in before_all() hook"
 
@@ -327,5 +326,5 @@ Feature: User-specific Configuration Data (userdata)
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """

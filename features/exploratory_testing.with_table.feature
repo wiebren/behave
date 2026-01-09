@@ -7,7 +7,7 @@ Feature: Exploratory Testing with Tables and Table Annotations
 
     . HINT: Does not work with monochrome format in pretty formatter:
     .   behave -f pretty --no-color ...
-    .   behave -c ...
+    .   behave --no-color ...
 
 
   @setup
@@ -23,6 +23,7 @@ Feature: Exploratory Testing with Tables and Table Annotations
       }
 
       @when('I query the database with')
+      @when('I query the database with:')
       def step_query_database_and_update_table(context):
           assert context.table, "REQUIRE: table"
           context.table.require_column("Name")
@@ -51,11 +52,13 @@ Feature: Exploratory Testing with Tables and Table Annotations
           pass
 
       @then('I inspect the table')
+      @then('I inspect the table:')
       def step_inspect_table(context):
           assert context.current_table
           context.table = context.current_table
 
       @then('the table contains')
+      @then('the table contains:')
       def step_inspect_table(context):
           assert context.table, "REQUIRE: table"
           assert context.current_table, "REQUIRE: current_table"
@@ -76,16 +79,16 @@ Feature: Exploratory Testing with Tables and Table Annotations
         """
       When I run "behave -f plain features/table.set_column_data.feature"
       Then it should pass with:
-         """
-         1 scenario passed, 0 failed, 0 skipped
-         2 steps passed, 0 failed, 0 skipped, 0 undefined
-         """
+        """
+        1 scenario passed, 0 failed, 0 skipped
+        2 steps passed, 0 failed, 0 skipped
+        """
       And the command output should contain:
-         """
-         | Name  | Age |
-         | Alice | 10  |
-         | Bob   | 11  |
-         """
+        """
+        | Name  | Age |
+        | Alice | 10  |
+        | Bob   | 11  |
+        """
       But note that "the Age table column was added by the step"
 
 
@@ -106,36 +109,36 @@ Feature: Exploratory Testing with Tables and Table Annotations
         """
       When I run "behave -f plain features/table.modify_column.feature"
       Then it should pass with:
-         """
-         1 scenario passed, 0 failed, 0 skipped
-         3 steps passed, 0 failed, 0 skipped, 0 undefined
-         """
+        """
+        1 scenario passed, 0 failed, 0 skipped
+        3 steps passed, 0 failed, 0 skipped
+        """
       And the command output should contain:
-         """
-         | Name  | Age |
-         | Alice | 10  |
-         | Bob   | 11  |
-         """
+        """
+        | Name  | Age |
+        | Alice | 10  |
+        | Bob   | 11  |
+        """
       But note that "the Age column was modified in the table"
       And the command output should not contain:
-         """
-         | Name  | Age |
-         | Alice | 222 |
-         | Bob   | 333 |
-         """
+        """
+        | Name  | Age |
+        | Alice | 222 |
+        | Bob   | 333 |
+        """
 
 
     Scenario: Modify table cells in a column (formatter=pretty with colors)
       When I run "behave -f pretty features/table.modify_column.feature"
       Then it should pass with:
-         """
-         1 scenario passed, 0 failed, 0 skipped
-         3 steps passed, 0 failed, 0 skipped, 0 undefined
-         """
+        """
+        1 scenario passed, 0 failed, 0 skipped
+        3 steps passed, 0 failed, 0 skipped
+        """
       And the command output should contain:
-         """
-         | Name  | Age |
-         | Alice | 10  |
-         | Bob   | 11  |
-         """
+        """
+        | Name  | Age |
+        | Alice | 10  |
+        | Bob   | 11  |
+        """
       But note that "the Age column was modified in the table"

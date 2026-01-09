@@ -81,7 +81,7 @@ Feature: Scenario Outline -- Improvements
       """
 
   Scenario: Unique File Locations in generated scenarios
-    When I run "behave -f pretty -c features/named_examples.feature"
+    When I run "behave -f pretty --no-color features/named_examples.feature"
     Then it should pass with:
       """
       Scenario Outline: Named Examples -- @1.1 Alice  # features/named_examples.feature:7
@@ -101,7 +101,7 @@ Feature: Scenario Outline -- Improvements
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 2 skipped
-      1 step passed, 0 failed, 2 skipped, 0 undefined
+      1 step passed, 0 failed, 2 skipped
       """
     And the command output should contain:
       """
@@ -120,7 +120,7 @@ Feature: Scenario Outline -- Improvements
     Then it should pass with:
       """
       3 scenarios passed, 0 failed, 0 skipped
-      3 step passed, 0 failed, 0 skipped, 0 undefined
+      3 step passed, 0 failed, 0 skipped
       """
     And the command output should contain:
       """
@@ -134,7 +134,7 @@ Feature: Scenario Outline -- Improvements
     Then it should pass with:
       """
       2 scenarios passed, 0 failed, 1 skipped
-      2 steps passed, 0 failed, 1 skipped, 0 undefined
+      2 steps passed, 0 failed, 1 skipped
       """
     And the command output should contain:
       """
@@ -151,7 +151,7 @@ Feature: Scenario Outline -- Improvements
     Then it should pass with:
       """
       2 scenarios passed, 0 failed, 1 skipped
-      2 steps passed, 0 failed, 1 skipped, 0 undefined
+      2 steps passed, 0 failed, 1 skipped
       """
     And the command output should contain:
       """
@@ -168,7 +168,7 @@ Feature: Scenario Outline -- Improvements
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 2 skipped
-      1 step passed, 0 failed, 2 skipped, 0 undefined
+      1 step passed, 0 failed, 2 skipped
       """
     And the command output should contain:
       """

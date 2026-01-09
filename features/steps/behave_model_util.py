@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import
 from behave.model import Feature, Scenario, reset_model
-from behave.model_core import Status
+from behave.model_type import Status
 from behave.runner import ModelRunner
 from behave.parser import parse_tags
 from behave.configuration import Configuration
@@ -14,6 +14,7 @@ from behave.configuration import Configuration
 def convert_comma_list(text):
     text = text.strip()
     return [part.strip()  for part in text.split(",")]
+
 
 def convert_model_element_tags(text):
     return parse_tags(text.strip())
@@ -77,17 +78,19 @@ class BehaveModelBuilder(object):
                 self.build_unknown(statement, name, row_index=row_index)
         return Model(self.features)
 
+
 def run_model_with_cmdline(model, cmdline):
     reset_model(model.features)
     command_args = cmdline
     config = Configuration(command_args,
                            load_config=False,
                            default_format="null",
-                           stdout_capture=False,
-                           stderr_capture=False,
-                           log_capture=False)
+                           capture_stdout=False,
+                           capture_stderr=False,
+                           capture_log=False)
     model_runner = ModelRunner(config, model.features)
     return model_runner.run()
+
 
 def collect_selected_and_skipped_scenarios(model):  # pylint: disable=invalid-name
     selected = []
@@ -101,5 +104,3 @@ def collect_selected_and_skipped_scenarios(model):  # pylint: disable=invalid-na
                 assert scenario.status != Status.untested
                 selected.append(scenario)
     return (selected, skipped)
-
-

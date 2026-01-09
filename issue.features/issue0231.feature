@@ -51,27 +51,27 @@ Feature: Issue #231: Display the output of the last print command
 
 
   Scenario: Write to stdout without newline
-    When I run "behave -f pretty -c -T features/syndrome1.feature"
+    When I run "behave -f pretty --no-color -T features/syndrome1.feature"
     Then it should fail with:
       """
       0 scenarios passed, 1 failed, 0 skipped
-      2 steps passed, 1 failed, 0 skipped, 0 undefined
+      2 steps passed, 1 failed, 0 skipped
       """
     And the command output should contain:
       """
-      Captured stdout:
+      CAPTURED STDOUT: scenario
       ALICE was HERE
       """
 
   Scenario: Use print function without newline
-    When I run "behave -f pretty -c -T features/syndrome2.feature"
+    When I run "behave -f pretty --no-color -T features/syndrome2.feature"
     Then it should fail with:
       """
       0 scenarios passed, 1 failed, 0 skipped
-      1 step passed, 1 failed, 0 skipped, 0 undefined
+      1 step passed, 1 failed, 0 skipped
       """
     And the command output should contain:
       """
-      Captured stdout:
+      CAPTURED STDOUT: scenario
       BOB was HERE
       """

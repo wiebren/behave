@@ -126,7 +126,7 @@ Feature: Internationalization (i18n) and Problems with Unicode Strings
         """
         1 feature passed, 0 failed, 0 skipped
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
 
       Examples:
@@ -147,7 +147,7 @@ Feature: Internationalization (i18n) and Problems with Unicode Strings
         """
         0 features passed, 1 failed, 0 skipped
         0 scenarios passed, 1 failed, 0 skipped
-        0 steps passed, 1 failed, 0 skipped, 0 undefined
+        0 steps passed, 1 failed, 0 skipped
         """
 
       Examples:
@@ -387,11 +387,11 @@ Feature: Internationalization (i18n) and Problems with Unicode Strings
       Then it should fail with:
         """
         0 scenarios passed, 1 failed, 0 skipped
-        1 step passed, 1 failed, 0 skipped, 0 undefined
+        1 step passed, 1 failed, 0 skipped
         """
       And the command output should contain:
         """
-        Assertion Failed: XFAIL:¾;
+        ASSERT FAILED: XFAIL:¾;
         """
 
       Examples:
@@ -408,7 +408,7 @@ Feature: Internationalization (i18n) and Problems with Unicode Strings
       by using the default encoding (normally: ASCII).
       Therefore, the implicit encoding into a normal string often fails.
 
-      SEE ALSO: http://bugs.python.org/issue2517
+      SEE ALSO: https://bugs.python.org/issue2517
       NOTE: Better if encoding hint is provided in python file header.
 
       Given a file named "features/steps/problematic_steps.py" with:
@@ -431,8 +431,8 @@ Feature: Internationalization (i18n) and Problems with Unicode Strings
       When I run "behave -f <format> features/exception_with_ptext.feature"
       Then it should fail with:
         """
-        0 scenarios passed, 1 failed, 0 skipped
-        1 step passed, 1 failed, 0 skipped, 0 undefined
+        0 scenarios passed, 0 failed, 1 error, 0 skipped
+        1 step passed, 0 failed, 1 error, 0 skipped
         """
       And the command output should contain:
         """

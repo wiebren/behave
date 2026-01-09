@@ -13,12 +13,14 @@ Feature: Issue #66: context.text and context.table are not cleared
       import six
 
       @given(u'a step with multiline text')
+      @given(u'a step with multiline text:')
       def step(context):
           assert context.text is not None
           assert context.text, "Ensure non-empty"
           assert isinstance(context.text, six.string_types)
 
       @given(u'a step with a table')
+      @given(u'a step with a table:')
       def step(context):
           assert context.table is not None
 
@@ -57,7 +59,7 @@ Feature: Issue #66: context.text and context.table are not cleared
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 0 skipped
-      4 steps passed, 0 failed, 0 skipped, 0 undefined
+      4 steps passed, 0 failed, 0 skipped
       """
 
   Scenario: Ensure table data is cleared for next step
@@ -76,5 +78,5 @@ Feature: Issue #66: context.text and context.table are not cleared
     Then it should pass with:
       """
       1 scenario passed, 0 failed, 0 skipped
-      3 steps passed, 0 failed, 0 skipped, 0 undefined
+      3 steps passed, 0 failed, 0 skipped
       """

@@ -55,8 +55,8 @@ one section per test team.
 The following feature file provides a simple example of this functionality:
 
 .. code-block:: gherkin
+    :caption: FILE: features/tagged_examples.feature
 
-    # -- FILE: features/tagged_examples.feature
     Feature:
       Scenario Outline: Wow
         Given an employee "<name>"
@@ -83,10 +83,12 @@ The following feature file provides a simple example of this functionality:
 To run only the first ``Examples`` section, you use:
 
 .. code-block:: shell
+    :caption: shell
 
     behave --tags=@develop features/tagged_examples.feature
 
 .. code-block:: gherkin
+    :caption: Command output
 
     Scenario Outline: Wow -- @1.1 Araxas  # features/tagged_examples.feature:7
       Given an employee "Alice"
@@ -102,9 +104,9 @@ An even more natural fit is to use ``tagged examples`` together with
 ``active tags`` and ``userdata``:
 
 .. code-block:: gherkin
+    :caption: FILE: features/tagged_examples2.feature
 
-    # -- FILE: features/tagged_examples2.feature
-    # VARIANT 2: With active tags and userdata.
+    # -- VARIANT 2: With active tags and userdata.
     Feature:
       Scenario Outline: Wow
         Given an employee "<name>"
@@ -123,6 +125,7 @@ An even more natural fit is to use ``tagged examples`` together with
 Select the ``Examples`` section now by using:
 
 .. code-block:: shell
+    :caption: shell
 
     # -- VARIANT 1: Use userdata
     behave -D stage=integration features/tagged_examples2.feature
@@ -132,8 +135,8 @@ Select the ``Examples`` section now by using:
 
 
 .. code-block:: python
+    :caption: FILE: features/environment.py
 
-    # -- FILE: features/environment.py
     from behave.tag_matcher import ActiveTagMatcher, setup_active_tag_values
     import sys
 
@@ -151,11 +154,21 @@ Select the ``Examples`` section now by using:
         setup_active_tag_values(active_tag_value_provider, userdata)
 
     def before_scenario(context, scenario):
-        if active_tag_matcher.should_exclude_with(scenario.effective_tags):
+        if active_tag_matcher.should_exclude_with(scenario.tags):
             sys.stdout.write("ACTIVE-TAG DISABLED: Scenario %s\n" % scenario.name)
             scenario.skip(active_tag_matcher.exclude_reason)
 
 
+.. tip::
+
+    Since ``behave v1.2.7``, better use:
+
+    .. code-block:: python
+
+        def before_scenario(context, scenario):
+            # -- ALTERNATIVE: if active_tag_matcher.should_skip(scenario):
+            if active_tag_matcher.should_skip_with_tags(scenario.tags):
+                scenario.skip(active_tag_matcher.skip_reason)
 
 
 Gherkin Parser Improvements
@@ -169,7 +182,8 @@ The pipe symbol is normally used as column separator in tables.
 
 EXAMPLE:
 
-.. code-block:: Gherkin
+.. code-block:: gherkin
+    :caption: FILE: features/escaped_pipe.feature
 
     Scenario: Use escaped-pipe symbol
       Given I use table data with:
@@ -179,9 +193,7 @@ EXAMPLE:
 
 .. seealso::
 
-    * `issue.features/issue0302.feature`_ for details
-
-.. _`issue.features/issue0302.feature`: https://github.com/behave/behave/blob/master/issue.features/issue0302.feature
+    * :this_repo:`issue.features/issue0302.feature` for details
 
 
 Configuration Improvements
@@ -195,22 +207,22 @@ and the configuration ``lang`` option on command-line and in the configuration f
 changed slightly.
 
 If a ``language-tag`` is used in a feature file,
-it is now prefered over the command-line/configuration file settings.
+it is now preferred over the command-line/configuration file settings.
 This is especially useful when your feature files use multiple spoken languages
 (in different files).
 
 EXAMPLE:
 
-.. code-block:: Gherkin
+.. code-block:: gherkin
+    :caption: FILE: features/french_1.feature
 
-    # -- FILE: features/french_1.feature
     # language: fr
     Fonctionnalité: Alice
         ...
 
 .. code-block:: ini
+    :caption: FILE: behave.ini
 
-    # -- FILE: behave.ini
     [behave]
     lang = de       # Default (spoken) language to use: German
     ...
@@ -230,9 +242,9 @@ It is now possible to define ``default tags`` in the configuration file.
 EXAMPLE:
 
 .. code-block:: ini
+    :caption: FILE: behave.ini
 
-    # -- FILE: behave.ini
-    # Exclude/skip any feature/scenario with @xfail or @not_implemented tags
+    # -- Exclude/skip any feature/scenario with @xfail or @not_implemented tags
     [behave]
     default_tags = not (@xfail or @not_implemented)
     ...
@@ -254,9 +266,7 @@ to be skipped.
 
 .. seealso::
 
-    * `features/runner.hook_errors.feature`_ for the detailled specification
-
-.. _`features/runner.hook_errors.feature`: https://github.com/behave/behave/blob/master/features/runner.hook_errors.feature
+    * :this_repo:`features/runner.hook_errors.feature` for the detailed specification
 
 
 Option: Continue after Failed Step in a Scenario
@@ -268,8 +278,8 @@ remaining steps of a scenario.
 EXAMPLE:
 
 .. code-block:: python
+    :caption: FILE: features/environment.py
 
-    # -- FILE: features/environment.py
     from behave.model import Scenario
 
     def before_all(context):
@@ -289,9 +299,7 @@ EXAMPLE:
 
 .. seealso::
 
-    * `features/runner.continue_after_failed_step.feature`_ for the detailled specification
-
-.. _`features/runner.continue_after_failed_step.feature`: https://github.com/behave/behave/blob/master/features/runner.continue_after_failed_step.feature
+    * :this_repo:`features/runner.continue_after_failed_step.feature` for the detailed specification
 
 
 Testing asyncio Frameworks
@@ -327,19 +335,14 @@ A simple example for the implementation of the async-steps is shown for:
 
 .. literalinclude:: ../examples/async_step/features/steps/_async_steps35.py
     :language: python
-    :prepend:
-        # -- FILE: features/steps/async_steps35.py
+    :caption: FILE: features/steps/async_steps35.py
 
-
-.. literalinclude:: ../examples/async_step/features/steps/_async_steps34.py
-    :language: python
-    :prepend:
-        # -- FILE: features/steps/async_steps34.py
 
 When you use the async-step from above in a feature file and run it with behave:
 
 .. literalinclude:: ../examples/async_step/testrun_example.async_run.txt
     :language: gherkin
+    :caption: shell
     :prepend:
         # -- TEST-RUN OUTPUT:
         $ behave -f plain features/async_run.feature
@@ -348,12 +351,12 @@ When you use the async-step from above in a feature file and run it with behave:
 
     .. literalinclude:: ../examples/async_step/features/async_run.feature
         :language: gherkin
-        :prepend: # -- FILE: features/async_run.feature
+        :caption: FILE: features/async_run.feature
 
 .. note::
 
     The async-step is wrapped with an ``event_loop.run_until_complete()`` call.
-    As the timings show, it actually needs approximatly 0.3 seconds to run.
+    As the timings show, it actually needs approximately 0.3 seconds to run.
 
 
 
@@ -370,12 +373,13 @@ A simple example of this approach is shown in the following feature file:
 
 .. literalinclude:: ../examples/async_step/features/async_dispatch.feature
     :language: gherkin
-    :prepend: # -- FILE: features/async_dispatch.feature
+    :caption: FILE: features/async_dispatch.feature
 
 When you run this feature file:
 
 .. literalinclude:: ../examples/async_step/testrun_example.async_dispatch.txt
     :language: gherkin
+    :caption: shell
     :prepend:
         # -- TEST-RUN OUTPUT:
         $ behave -f plain features/async_dispatch.feature
@@ -393,9 +397,7 @@ The implementation of the steps from above:
 
 .. literalinclude:: ../examples/async_step/features/steps/async_dispatch_steps.py
     :language: gherkin
-    :prepend:
-        # -- FILE: features/steps/async_dispatch_steps.py
-        # REQUIRES: Python 3.4 or newer
+    :caption: FILE: features/steps/async_dispatch_steps.py
 
 
 Context-based Cleanups
@@ -409,9 +411,9 @@ This functionality is normally used in:
 * ...
 
 .. code-block:: python
+    :caption: SIGNATURE: ``Context.add_cleanup(cleanup_func, *args, **kwargs)``
 
-    # -- SIGNATURE: Context.add_cleanup(cleanup_func, *args, **kwargs)
-    # CLEANUP CALL EXAMPLES:
+    # -- CLEANUP CALL EXAMPLES:
     context.add_cleanup(cleanup0)                       # CALLS LATER: cleanup0()
     context.add_cleanup(cleanup1, 1, 2)                 # CALLS LATER: cleanup1(1, 2)
     context.add_cleanup(cleanup2, name="Alice")         # CALLS LATER: cleanup2(name="Alice")
@@ -424,8 +426,8 @@ This depends on the the context layer when the cleanup function was registered
 Example:
 
 .. code-block:: python
+    :caption: FILE: features/environment.py
 
-    # -- FILE: features/environment.py
     def before_all(context):
         context.add_cleanup(cleanup_me)
         # -- ON CLEANUP: Calls cleanup_me()
@@ -441,9 +443,7 @@ Example:
 
 .. seealso::
 
-    For more details, see `features/runner.context_cleanup.feature`_ .
-
-.. _`features/runner.context_cleanup.feature`: https://github.com/behave/behave/blob/master/features/runner.context_cleanup.feature
+    For more details, see :this_repo:`features/runner.context_cleanup.feature` .
 
 
 Fixtures
@@ -455,8 +455,9 @@ Providing a Fixture
 ~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
+    :caption: FILE: behave4my_project/fixtures.py
 
-    # -- FILE: behave4my_project/fixtures.py  (or in: features/environment.py)
+    # -- ALTERNATIVE-FILE-OPTION: features/environment.py
     from behave import fixture
     from somewhere.browser.firefox import FirefoxBrowser
 
@@ -473,8 +474,8 @@ Using a Fixture
 ~~~~~~~~~~~~~~~
 
 .. code-block:: Gherkin
+    :caption: FILE: features/use_fixture1.feature
 
-    # -- FILE: features/use_fixture1.feature
     Feature: Use Fixture on Scenario Level
 
         @fixture.browser.firefox
@@ -484,8 +485,8 @@ Using a Fixture
         # -- AFTER-SCENARIO: Cleanup fixture.browser.firefox
 
 .. code-block:: python
+    :caption: FILE: features/environment.py
 
-    # -- FILE: features/environment.py
     from behave import use_fixture
     from behave4my_project.fixtures import browser_firefox
 
@@ -497,6 +498,4 @@ Using a Fixture
 .. seealso::
 
     * :ref:`docid.fixtures` description for details
-    * `features/fixture.feature`_
-
-.. _`features/fixture.feature`: https://github.com/behave/behave/blob/master/features/fixture.feature
+    * :this_repo:`features/fixture.feature`

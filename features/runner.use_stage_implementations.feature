@@ -72,12 +72,12 @@ Feature: Use Alternate Step Implementations for Each Test Stage
             assert context.config.stage == "develop"
             assert context.use_develop_environment
         """
-    When I run "behave -c --stage=develop features/example1.feature"
+    When I run "behave --no-color --stage=develop features/example1.feature"
     Then it should pass with:
         """
         1 feature passed, 0 failed, 0 skipped
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
     And the command output should contain:
         """
@@ -87,12 +87,12 @@ Feature: Use Alternate Step Implementations for Each Test Stage
 
   Scenario: Use default stage
     Given I remove the environment variable "BEHAVE_STAGE"
-     When I run "behave -c features/example1.feature"
+     When I run "behave --no-color features/example1.feature"
      Then it should pass with:
         """
         1 feature passed, 0 failed, 0 skipped
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
     And the command output should contain:
         """
@@ -102,12 +102,12 @@ Feature: Use Alternate Step Implementations for Each Test Stage
 
   Scenario: Use the BEHAVE_STAGE environment variable to define the test stage
     Given I set the environment variable "BEHAVE_STAGE" to "develop"
-    When I run "behave -c features/example1.feature"
+    When I run "behave --no-color features/example1.feature"
     Then it should pass with:
         """
         1 feature passed, 0 failed, 0 skipped
         1 scenario passed, 0 failed, 0 skipped
-        1 step passed, 0 failed, 0 skipped, 0 undefined
+        1 step passed, 0 failed, 0 skipped
         """
     And the command output should contain:
         """
@@ -119,7 +119,7 @@ Feature: Use Alternate Step Implementations for Each Test Stage
 
 
   Scenario: Using an unknown stage
-    When I run "behave -c --stage=unknown features/example1.feature"
+    When I run "behave --no-color --stage=unknown features/example1.feature"
     Then it should fail with:
         """
         ConfigError: No unknown_steps directory

@@ -1,6 +1,6 @@
 @issue
 @unicode
-Feature: Issue #449 -- Unicode output problem when fails with Russion text
+Feature: Issue #449 -- Unicode output problem when fails with Russian text
 
   . Either Exception text (as summary) or traceback python line shows
   . special characters correctly.
@@ -34,9 +34,9 @@ Feature: Issue #449 -- Unicode output problem when fails with Russion text
       """
       Scenario:
         Given Russian text ... failed
-      Assertion Failed: Всё очень плохо
+      ASSERT FAILED: Всё очень плохо
       """
     But the command output should not contain:
       """
-      Assertion Failed: 'ascii' codec can't encode characters in position
+      ASSERT FAILED: 'ascii' codec can't encode characters in position
       """

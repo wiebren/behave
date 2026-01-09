@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from behave.model_core import Status
+from behave.model_type import Status
+
 
 class Reporter(object):
     """
@@ -36,7 +37,7 @@ class Reporter(object):
         :param feature:  Feature object (as :class:`behave.model.Feature`)
         """
         assert feature.status != Status.undefined
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def end(self):
         """

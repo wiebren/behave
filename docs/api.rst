@@ -114,7 +114,7 @@ You may add new types to the default parser by invoking
 
 .. hidden:
 
-    # -- SUPERCEEDED BY: behave.register_type documentation
+    # -- SUPERSEDED BY: behave.register_type documentation
     An example of this in action could be, in steps.py:
 
     .. code-block:: python
@@ -137,7 +137,7 @@ name" to :class:`~behave.matchers.Matcher` class.
 .. autoclass:: behave.matchers.Matcher
    :members:
 
-.. autoclass:: behave.model_core.Argument
+.. autoclass:: behave.model_type.Argument
 
 .. autoclass:: behave.matchers.Match
 
@@ -204,7 +204,7 @@ events during your testing:
   The feature object, that is passed in, is an instance of :class:`~behave.model.Feature`.
 
 **before_rule(context, rule), after_rule(context, rule)**
-  These run before and after each rule is execured.
+  These run before and after each rule is executed.
   The rule object, that is passed in, is an instance of :class:`~behave.model.Rule`.
 
 **before_scenario(context, scenario), after_scenario(context, scenario)**
@@ -321,7 +321,7 @@ Runner Operation
 
 The execution of code is based on the Gherkin description in `*.feature` files.
 The following section provides a short overview of the hierarchical containment
-that is possible in the Gherkin grammer:
+that is possible in the Gherkin grammar:
 
 .. parsed-literal::
 
@@ -490,5 +490,18 @@ intended to be used on your `environment file functions`_.
 
 .. autofunction:: behave.log_capture.capture
 
+
+Configuration
+===============
+
+The configuration object, that is using :class:`~behave.configuration.Configuration` class,
+contains the data from the command-line options and the configuration file(s).
+
+.. autoclass:: behave.configuration.Configuration
+   :members:
+
+.. seealso::
+
+    See chapter :ref:`id.using_behave` for command-line options and configuration file parameter.
 
 .. include:: _common_extlinks.rst

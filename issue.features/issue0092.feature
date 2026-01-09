@@ -49,7 +49,7 @@ Feature: Issue #92: Output from --format=plain shows skipped steps in next scena
         """
         0 features passed, 1 failed, 0 skipped
         0 scenarios passed, 2 failed, 0 skipped
-        2 steps passed, 2 failed, 2 skipped, 0 undefined
+        2 steps passed, 2 failed, 2 skipped
         """
     And the command output should contain:
         """
@@ -57,10 +57,10 @@ Feature: Issue #92: Output from --format=plain shows skipped steps in next scena
            Scenario: First example
                Given this step works ... passed
                 When this step fails ... failed
-           Assertion Failed: step failed
+           ASSERT FAILED: step failed
 
            Scenario: Second example
                Given this step works ... passed
                 When this step fails ... failed
-           Assertion Failed: step failed
+           ASSERT FAILED: step failed
         """

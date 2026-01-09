@@ -4,15 +4,15 @@ Unit tests for :mod:`behave.fixture` module.
 """
 
 from __future__ import absolute_import, print_function
-import sys
 import inspect
-from behave.fixture import \
-    fixture, use_fixture, is_context_manager, InvalidFixtureError, \
+from behave.fixture import (
+    fixture, use_fixture, is_context_manager, InvalidFixtureError,
     use_fixture_by_tag, use_composite_fixture_with, fixture_call_params
-from behave.runner import Context, CleanupError, scoped_context_layer
+)
 from behave._types import Unknown
+from behave.configuration import Configuration
+from behave.runner import Runner, Context, scoped_context_layer
 import pytest
-from mock import Mock
 import six
 
 
@@ -21,12 +21,11 @@ import six
 # -----------------------------------------------------------------------------
 def make_runtime_context(runner=None):
     """Build a runtime/runner context for the tests here (partly faked).
-    
+
     :return: Runtime context object (normally used by the runner).
     """
     if runner is None:
-        runner = Mock()
-        runner.config = Mock()
+        runner = Runner(config=Configuration(load_config=False))
     return Context(runner)
 
 
@@ -65,12 +64,21 @@ class BasicFixture(object):
         return "%s: args=%s; kwargs=%s" % (self.name, args_text, kwargs_text)
 
 
-class FooFixture(BasicFixture): pass
-class BarFixture(BasicFixture): pass
+class FooFixture(BasicFixture):
+    pass
+
+
+class BarFixture(BasicFixture):
+    pass
+
 
 # -- FIXTURE EXCEPTIONS:
-class FixtureSetupError(RuntimeError): pass
-class FixtureCleanupError(RuntimeError): pass
+class FixtureSetupError(RuntimeError):
+    pass
+
+
+class FixtureCleanupError(RuntimeError):
+    pass
 
 
 # -----------------------------------------------------------------------------
@@ -111,7 +119,7 @@ class TestFixtureDecorator(object):
         def foo(context, *args, **kwargs):
             pass
 
-        assert foo.behave_fixture == True
+        assert foo.behave_fixture is True
         assert foo.name is None
         assert foo.pattern is None
         assert callable(foo)
@@ -121,7 +129,7 @@ class TestFixtureDecorator(object):
         def bar0(context, *args, **kwargs):
             pass
 
-        assert bar0.behave_fixture == True
+        assert bar0.behave_fixture is True
         assert bar0.name is None
         assert bar0.pattern is None
         assert callable(bar0)
@@ -131,7 +139,7 @@ class TestFixtureDecorator(object):
         def bar1(context, *args, **kwargs):
             pass
 
-        assert bar1.behave_fixture == True
+        assert bar1.behave_fixture is True
         assert bar1.name == "fixture.bar2"
         assert bar1.pattern is None
         assert callable(bar1)
@@ -170,11 +178,12 @@ class TestFixtureDecorator(object):
         assert isinstance(the_fixture, BarFixture)
 
     def test_decorator_with_non_callable_raises_type_error(self):
-        class NotCallable(object): pass
+        class NotCallable(object):
+            pass
 
         with pytest.raises(TypeError) as exc_info:
             not_callable = NotCallable()
-            bad_fixture = fixture(not_callable)     # DECORATED_BY_HAND
+            _bad_fixture = fixture(not_callable)     # DECORATED_BY_HAND
 
         exception_text = str(exc_info.value)
         assert "Invalid func:" in exception_text
@@ -278,7 +287,7 @@ class TestUseFixture(object):
         # -- NOT: Normal functions have no fixture-cleanup part.
 
     def test_can_use_fixture_two_times(self):
-        """Ensures that a fixture can be used multiple times 
+        """Ensures that a fixture can be used multiple times
         (with different names) within a context layer.
         """
         @fixture
@@ -327,7 +336,7 @@ class TestUseFixture(object):
         context = make_runtime_context()
         with pytest.raises(InvalidFixtureError):
             with scoped_context_layer(context):
-                the_fixture = use_fixture(invalid_fixture, context, checkpoints)
+                _the_fixture = use_fixture(invalid_fixture, context, checkpoints)
                 assert checkpoints == ["bad.setup"]
                 checkpoints.append("scoped-block")
 
@@ -433,17 +442,17 @@ class TestUseFixture(object):
             checkpoints.append("bad.cleanup.done:NOT_REACHED")
 
         # -- PERFORM TEST:
-        the_fixture1 = None
-        the_fixture2 = None
-        the_fixture3 = None
+        _the_fixture1 = None
+        _the_fixture2 = None
+        _the_fixture3 = None
         checkpoints = []
         context = make_runtime_context()
         bad_fixture = bad_with_cleanup_error
         with pytest.raises(FixtureCleanupError):
             with scoped_context_layer(context):
-                the_fixture1 = use_fixture(foo, context, checkpoints, name="foo_1")
-                the_fixture2 = use_fixture(bad_fixture, context, checkpoints, name="BAD")
-                the_fixture3 = use_fixture(foo, context, checkpoints, name="foo_3")
+                _the_fixture1 = use_fixture(foo, context, checkpoints, name="foo_1")
+                _the_fixture2 = use_fixture(bad_fixture, context, checkpoints, name="BAD")
+                _the_fixture3 = use_fixture(foo, context, checkpoints, name="foo_3")
                 checkpoints.append("scoped-block")
 
         # -- VERIFY: Tries to perform all cleanups even when cleanup-error(s) occur.

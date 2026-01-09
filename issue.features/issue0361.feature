@@ -33,7 +33,7 @@ Feature: Issue #361 -- UTF-8 File with BOM
   @encoding.<encoding>
   @not.with_python.implementation=<exclude_pyimpl>
   Scenario Outline: Use step file with <case>
-    Given a file named "features/steps/my_steps.py" and encoding="<encoding>" with:
+    Given a file named "features/steps/my_steps.py" using encoding="<encoding>" with:
         """
         # -*- coding: <encoding> -*-
         '''
@@ -49,7 +49,7 @@ Feature: Issue #361 -- UTF-8 File with BOM
     Then it should pass with:
         """
         1 scenario passed, 0 failed, 0 skipped
-        2 steps passed, 0 failed, 0 skipped, 0 undefined
+        2 steps passed, 0 failed, 0 skipped
         """
     And the command output should contain:
         """

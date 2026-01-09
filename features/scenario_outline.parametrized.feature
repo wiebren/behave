@@ -3,7 +3,7 @@ Feature: Scenario Outline -- Parametrized Scenarios
   As a test writer
   I want to use the DRY principle when writing scenarios
   So that I am more productive and my work is less error-prone.
-  
+
   . COMMENT:
   .   A Scenario Outline is basically a parametrized Scenario template.
   .   It is instantiated for each examples row with the corresponding data.
@@ -32,6 +32,7 @@ Feature: Scenario Outline -- Parametrized Scenarios
       """
       [behave]
       scenario_outline_annotation_schema = {name} -*- {examples.name}
+      show_timings = false
       """
     And a file named "features/steps/param_steps.py" with:
       """
@@ -47,10 +48,12 @@ Feature: Scenario Outline -- Parametrized Scenarios
           context.param_value = value
 
       @step('a step with text')
+      @step('a step with text:')
       def step_with_param_value(context):
           assert context.text is not None, "REQUIRE: text"
 
       @step('a step with table')
+      @step('a step with table:')
       def step_with_param_value(context):
           assert context.table is not None, "REQUIRE: table"
 
@@ -116,7 +119,7 @@ Feature: Scenario Outline -- Parametrized Scenarios
             | 001 | Alice |  101   |
             | 002 | Bob   |  102   |
       """
-    When I run "behave -f plain --no-timings features/use_steps_with_params.feature"
+    When I run "behave -f plain features/use_steps_with_params.feature"
     Then it should pass with:
       """
       Scenario Outline: Use row placeholders -*-
@@ -131,6 +134,34 @@ Feature: Scenario Outline -- Parametrized Scenarios
       """
 
   @parametrize.steps
+  Scenario: Use placeholders in generated background steps
+    Given a file named "features/use_background_steps_with_params.feature" with:
+      """
+      Feature:
+        Background: Use row placeholders
+          Given a param ID=<ID>
+
+        Scenario Outline: Use row placeholders in background steps
+          Given a param name=<name>
+
+          Examples:
+            | ID  | name  |
+            | 001 | Alice |
+            | 002 | Bob   |
+      """
+    When I run "behave -f plain features/use_background_steps_with_params.feature"
+    Then it should pass with:
+      """
+      Scenario Outline: Use row placeholders in background steps -*-
+        Given a param ID=001 ... passed
+        Given a param name=Alice ... passed
+
+      Scenario Outline: Use row placeholders in background steps -*-
+        Given a param ID=002 ... passed
+        Given a param name=Bob ... passed
+      """
+
+  @parametrize.steps
   Scenario: Use an unknown placeholder in generated scenario steps
     Given a file named "features/use_steps_with_unknown_params.feature" with:
       """
@@ -142,7 +173,7 @@ Feature: Scenario Outline -- Parametrized Scenarios
             | ID  | name  | param1 |
             | 001 | Alice |  100   |
       """
-    When I run "behave -f plain --no-timings features/use_steps_with_unknown_params.feature"
+    When I run "behave -f plain features/use_steps_with_unknown_params.feature"
     Then it should pass with:
       """
       Scenario Outline: Use unknown placeholders -*-
@@ -167,11 +198,11 @@ Feature: Scenario Outline -- Parametrized Scenarios
             | ID  | name  | greeting | travel agency |
             | 001 | Alice |  Hello   | Pony express  |
       '''
-    When I run "behave -f plain --no-timings features/use_steps_with_param_text.feature"
+    When I run "behave -f plain features/use_steps_with_param_text.feature"
     Then it should pass with:
       '''
       Scenario Outline: Use parametrized step with text -*-
-          Given a step with text ... passed
+          Given a step with text: ... passed
             """
             Hello Alice;
             Travel agency: Pony express
@@ -194,11 +225,11 @@ Feature: Scenario Outline -- Parametrized Scenarios
             | ID  | name  | greeting | travel agency |
             | 001 | Alice |  Hello   | Pony express  |
       """
-    When I run "behave -f plain --no-timings features/use_steps_with_param_table.feature"
+    When I run "behave -f plain features/use_steps_with_param_table.feature"
     Then it should pass with:
       """
       Scenario Outline: Use parametrized step with table -*-
-        Given a step with table ... passed
+        Given a step with table: ... passed
           | Id  | Name  | Travel Agency | row id   |
           | 001 | Alice | Pony express  | <row.id> |
       """
@@ -223,7 +254,7 @@ Feature: Scenario Outline -- Parametrized Scenarios
             | 001 | Alice |  100  |
             | 002 | Bob   |  101  |
       """
-    When I run "behave -f plain --no-timings features/use_steps_with_special_params.feature"
+    When I run "behave -f plain features/use_steps_with_special_params.feature"
     Then it should pass with:
       """
       Scenario Outline: Use special placeholders @1.1 -*- E-001/@1.1
@@ -272,7 +303,7 @@ Feature: Scenario Outline -- Parametrized Scenarios
       Use placeholder data:row.id=100 -*- special:row.id=@1.1 E-001/100  ..
       Use placeholder data:row.id=101 -*- special:row.id=@1.2 E-002/101  ..
       """
-    When I run "behave -f plain --no-timings features/use_name_with_overwritten_params.feature"
+    When I run "behave -f plain features/use_name_with_overwritten_params.feature"
     Then it should pass with:
       """
       Scenario Outline: Use placeholder data:row.id=100 -*- special:row.id=@1.1 E-001/100
@@ -306,13 +337,13 @@ Feature: Scenario Outline -- Parametrized Scenarios
           Given a param name=<name>
 
           Examples:
-            | name      | Expected | ID  | Case: |
-            | <ID>      | 001      | 001 | Value refers to other, known placeholder.|
-            | <ID>      | 002      | 002 | Check if row specific value is used.     |
-            | <unknown> | <unkown> | 003 | Value refers to unknown placeholder.     |
-            | <name>    | <name>   | 004 | Value refers to itself (recursion?).     |
+            | name      | Expected  | ID  | Case: |
+            | <ID>      | 001       | 001 | Value refers to other, known placeholder.|
+            | <ID>      | 002       | 002 | Check if row specific value is used.     |
+            | <unknown> | <unknown> | 003 | Value refers to unknown placeholder.     |
+            | <name>    | <name>    | 004 | Value refers to itself (recursion?).     |
       """
-    When I run "behave -f plain --no-timings features/use_value_with_placeholder_syntax.feature"
+    When I run "behave -f plain features/use_value_with_placeholder_syntax.feature"
     Then it should pass with:
       """
       Scenario Outline: Use weird placeholder values -*- @1.1
@@ -348,7 +379,7 @@ Feature: Scenario Outline -- Parametrized Scenarios
             | 001 | Alice |
             | 002 | Bob   |
       """
-    When I run "behave -f pretty -c --no-timings features/parametrized_tags.feature"
+    When I run "behave -f pretty --no-color features/parametrized_tags.feature"
     Then it should pass with:
       """
       @foo @outline.e1 @outline.row.1.1 @outline.ID.001
@@ -382,7 +413,7 @@ Feature: Scenario Outline -- Parametrized Scenarios
             | 002 | Bob\tMarley  | Placeholder value w/ tab        |
             | 003 | Joe\nCocker  | Placeholder value w/ newline    |
       """
-    When I run "behave -f pretty -c --no-source features/parametrized_tags2.feature"
+    When I run "behave -f pretty --no-color --no-source features/parametrized_tags2.feature"
     Then it should pass with:
       """
       @outline.name.Alice_Cooper

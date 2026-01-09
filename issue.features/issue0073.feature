@@ -37,7 +37,7 @@ Feature: Issue #73: the current_matcher is not predictable
     Then it should pass with
         """
         1 scenario passed, 0 failed, 0 skipped
-        3 steps passed, 0 failed, 0 skipped, 0 undefined
+        3 steps passed, 0 failed, 0 skipped
         """
 
 
@@ -45,8 +45,8 @@ Feature: Issue #73: the current_matcher is not predictable
     Given a new working directory
     And   a file named "features/environment.py" with:
         """
-        from behave import use_step_matcher
-        use_step_matcher("re")
+        from behave import use_default_step_matcher
+        use_default_step_matcher("re")
         """
     And   a file named "features/steps/regexp_steps.py" with:
         """
@@ -68,7 +68,7 @@ Feature: Issue #73: the current_matcher is not predictable
     Then it should pass with
         """
         1 scenario passed, 0 failed, 0 skipped
-        3 steps passed, 0 failed, 0 skipped, 0 undefined
+        3 steps passed, 0 failed, 0 skipped
         """
 
 
@@ -76,8 +76,8 @@ Feature: Issue #73: the current_matcher is not predictable
     Given a new working directory
     And   a file named "features/environment.py" with:
         """
-        from behave import use_step_matcher
-        use_step_matcher("re")
+        from behave import use_default_step_matcher
+        use_default_step_matcher("re")
         """
      And   a file named "features/steps/eparse_steps.py" with:
          """
@@ -117,7 +117,7 @@ Feature: Issue #73: the current_matcher is not predictable
     Then it should pass with
         """
         1 scenario passed, 0 failed, 0 skipped
-        3 steps passed, 0 failed, 0 skipped, 0 undefined
+        3 steps passed, 0 failed, 0 skipped
         """
 
 
@@ -125,8 +125,8 @@ Feature: Issue #73: the current_matcher is not predictable
     Given a new working directory
     And   a file named "features/environment.py" with:
         """
-        from behave import use_step_matcher
-        use_step_matcher("re")
+        from behave import use_default_step_matcher
+        use_default_step_matcher("re")
         """
      And   a file named "features/steps/given_steps.py" with:
          """
@@ -202,11 +202,11 @@ Feature: Issue #73: the current_matcher is not predictable
             When  a step passes
             Then  another step passes
         """
-    When I run "behave -c -f pretty --no-timings features/passing3.feature"
+    When I run "behave --no-color -f pretty --no-timings features/passing3.feature"
     Then it should pass with:
         """
         3 scenarios passed, 0 failed, 0 skipped
-        9 steps passed, 0 failed, 0 skipped, 0 undefined
+        9 steps passed, 0 failed, 0 skipped
         """
     And the command output should contain:
         """

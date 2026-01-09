@@ -2,7 +2,7 @@
 @not.with_python2=true
 Feature: Issue #657 -- Allow async steps with timeouts to fail when they raise exceptions
 
-    @use.with_python_has_async_function=true
+    @use.with_python.feature.async_keyword=true
     @async_step_fails
     Scenario: Use @async_run_until_complete and async-step fails (py.version >= 3.8)
       Given a new working directory
@@ -32,11 +32,11 @@ Feature: Issue #657 -- Allow async steps with timeouts to fail when they raise e
       When I run "behave -f plain --show-timings features/async_failure.feature"
       Then it should fail with:
         """
-        1 step passed, 1 failed, 1 skipped, 0 undefined
+        1 step passed, 1 failed, 1 skipped
         """
       And the command output should contain:
         """
-        Assertion Failed: XFAIL in async-step
+        ASSERT FAILED: XFAIL in async-step
         """
       And the command output should contain:
         """

@@ -24,12 +24,12 @@ Feature: Issue #506 -- Behave stops on error
       And a file named "features/steps/steps.py" with:
         """
         from behave import when, then
-        from behave._types import ChainedExceptionUtil
+        from behave.exception_util import ChainedExceptionUtil
         import copy
 
         @when('I bad chained-exception causes my step to fail')
         def step_bad_usage_of_chained_exception(context):
-            # -- BAD IMPLEMENATION:
+            # -- BAD IMPLEMENTATION:
             exception = ZeroDivisionError('integer division or modulo by zero')
             exception.__cause__ = copy.copy(exception)
             raise exception
@@ -59,7 +59,7 @@ Feature: Issue #506 -- Behave stops on error
       When I run "behave -f plain features/syndrome.feature"
       Then it should fail with:
         """
-        0 scenarios passed, 1 failed, 0 skipped
+        0 scenarios passed, 0 failed, 1 error, 0 skipped
         """
       And the command output should contain:
         """

@@ -2,7 +2,7 @@ Feature: Advanced, more complex directory layout (Variant 2)
 
   As a story/test writer
   I want a deeper, more structured directory structure when many feature files exist
-  So that I have the parts better under control (more managable)
+  So that I have the parts better under control (more manageable)
 
   . ADVANCED, MORE COMPLEX DIRECTORY LAYOUT STRUCTURE:
   .     features/
@@ -80,7 +80,7 @@ Feature: Advanced, more complex directory layout (Variant 2)
             """
             3 features passed, 0 failed, 0 skipped
             4 scenarios passed, 0 failed, 0 skipped
-            8 steps passed, 0 failed, 0 skipped, 0 undefined
+            8 steps passed, 0 failed, 0 skipped
             """
 
     Scenario: Run behave with feature subdirectory (CASE 1)
@@ -89,7 +89,7 @@ Feature: Advanced, more complex directory layout (Variant 2)
             """
             2 features passed, 0 failed, 0 skipped
             3 scenarios passed, 0 failed, 0 skipped
-            6 steps passed, 0 failed, 0 skipped, 0 undefined
+            6 steps passed, 0 failed, 0 skipped
             """
 
     Scenario: Run behave with feature subdirectory (CASE 2)
@@ -98,7 +98,7 @@ Feature: Advanced, more complex directory layout (Variant 2)
             """
             1 feature passed, 0 failed, 0 skipped
             1 scenario passed, 0 failed, 0 skipped
-            2 steps passed, 0 failed, 0 skipped, 0 undefined
+            2 steps passed, 0 failed, 0 skipped
             """
 
     Scenario: Run behave with one feature file
@@ -107,14 +107,14 @@ Feature: Advanced, more complex directory layout (Variant 2)
             """
             1 feature passed, 0 failed, 0 skipped
             2 scenarios passed, 0 failed, 0 skipped
-            4 steps passed, 0 failed, 0 skipped, 0 undefined
+            4 steps passed, 0 failed, 0 skipped
             """
         When I run "behave -f progress features/group2/charly.feature"
         Then it should pass with:
             """
             1 feature passed, 0 failed, 0 skipped
             1 scenario passed, 0 failed, 0 skipped
-            2 steps passed, 0 failed, 0 skipped, 0 undefined
+            2 steps passed, 0 failed, 0 skipped
             """
 
 
@@ -129,7 +129,7 @@ Feature: Advanced, more complex directory layout (Variant 2)
             """
             2 features passed, 0 failed, 0 skipped
             3 scenarios passed, 0 failed, 0 skipped
-            6 steps passed, 0 failed, 0 skipped, 0 undefined
+            6 steps passed, 0 failed, 0 skipped
             """
 
     Scenario: Run behave with two feature files (CASE 2: different ordering)
@@ -143,5 +143,5 @@ Feature: Advanced, more complex directory layout (Variant 2)
             """
             2 features passed, 0 failed, 0 skipped
             3 scenarios passed, 0 failed, 0 skipped
-            6 steps passed, 0 failed, 0 skipped, 0 undefined
+            6 steps passed, 0 failed, 0 skipped
             """

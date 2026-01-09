@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+# ruff: noqa: E501
 """
 Explore issue #495.
 HINT: Problem can be reproduced if you remove encoding-declaration from above.
@@ -32,7 +33,8 @@ import pytest
 # def ensure_logging_setup():
 #    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-class SimpleContext(object): pass
+class SimpleContext(object):
+    pass
 
 
 # -----------------------------------------------------------------------------
@@ -40,7 +42,7 @@ class SimpleContext(object): pass
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize("log_message", [
     u"Hello Alice",             # case: unproblematic (GOOD CASE)
-    u"Ärgernis ist überall",    # case: unicode-string
+    u"Ärgernis ist überall",    # case: unicode-string  # codespell:ignore ist
     "Ärgernis",                 # case: byte-string (use encoding-declaration above)
 ])
 def test_issue(log_message):
@@ -53,8 +55,8 @@ def test_issue(log_message):
     # ensure_logging_setup()
     context = SimpleContext()
     context.config = Configuration("", load_config=False,
-        log_capture=True,
-        logging_format="%(levelname)s: %(message)s",
+        capture_log=True,
+        logging_format="LOG_%(levelname)s: %(message)s",
         logging_level=logging.INFO
     )
     context.config.setup_logging()

@@ -1,12 +1,13 @@
 # -*- coding: UTF-8 -*-
 # -- FILE: features/steps/fixture_steps.py
 
-from __future__ import print_function
-from behave import when
-import os
-import sys
+from __future__ import absolute_import, print_function
+# -- PREPARED:
+# from behave import when
+# import os
+# import sys
 
-# XXX
+# -- TODO:
 # # -- VARIANT 1:
 # @when(u'I click on ${environment_variable:w}')
 # def step_impl(context, environment_variable):

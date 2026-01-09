@@ -1,3 +1,5 @@
+.. _id.using_behave:
+
 ==============
 Using *behave*
 ==============
@@ -15,29 +17,28 @@ Command-Line Arguments
 You may see the same information presented below at any time using ``behave
 -h``.
 
-.. option:: -c, --no-color
+.. option:: -C, --no-color
 
-    Disable the use of ANSI color escapes.
+    Disable colored mode.
 
-.. option:: --color
+.. option:: --color COLORED
 
-    Use ANSI color escapes. Defaults to %(const)r. This switch is used to
-    override a configuration file setting.
+    Use colored mode or not (default: auto).
 
 .. option:: -d, --dry-run
 
     Invokes formatters without executing the steps.
 
-.. option:: -D, --define
+.. option:: -D NAME=VALUE, --define NAME=VALUE
 
     Define user-specific data for the config.userdata dictionary. Example:
     -D foo=bar to store it in config.userdata["foo"].
 
-.. option:: -e, --exclude
+.. option:: -e PATTERN, --exclude PATTERN
 
     Don't run feature files matching regular expression PATTERN.
 
-.. option:: -i, --include
+.. option:: -i PATTERN, --include PATTERN
 
     Only run feature files matching regular expression PATTERN.
 
@@ -51,25 +52,26 @@ You may see the same information presented below at any time using ``behave
     stderr will be redirected and dumped to the junit report,
     regardless of the "--capture" and "--no-capture" options.
 
-.. option:: --junit-directory
+.. option:: --junit-directory PATH
 
     Directory in which to store JUnit reports.
 
-.. option:: --runner-class
+.. option:: -j NUMBER, --jobs NUMBER, --parallel NUMBER
 
-    Tells Behave to use a specific runner. (default: %(default)s)
+    Number of concurrent jobs to use (default: 1). Only supported by test
+    runners that support parallel execution.
 
-.. option:: -f, --format
+.. option:: -f FORMATTER, --format FORMATTER
 
     Specify a formatter. If none is specified the default formatter is
     used. Pass "--format help" to get a list of available formatters.
 
 .. option:: --steps-catalog
 
-    Show a catalog of all available step definitions. SAME AS:
-    --format=steps.catalog --dry-run --no-summary -q
+    Show a catalog of all available step definitions. SAME AS: "--
+    format=steps.catalog --dry-run --no-summary -q".
 
-.. option:: -k, --no-skipped
+.. option:: --no-skipped
 
     Don't print skipped steps (due to tags).
 
@@ -87,7 +89,7 @@ You may see the same information presented below at any time using ``behave
     Print snippets for unimplemented steps. This is the default behaviour.
     This switch is used to override a configuration file setting.
 
-.. option:: -m, --no-multiline
+.. option:: --no-multiline
 
     Don't print multiline strings and tables under steps.
 
@@ -97,60 +99,70 @@ You may see the same information presented below at any time using ``behave
     behaviour. This switch is used to override a configuration file
     setting.
 
-.. option:: -n, --name
+.. option:: -n NAME_PATTERN, --name NAME_PATTERN
 
     Select feature elements (scenarios, ...) to run which match part of
     the given name (regex pattern). If this option is given more than
     once, it will match against all the given names.
 
-.. option:: --no-capture
-
-    Don't capture stdout (any stdout output will be printed immediately.)
-
 .. option:: --capture
 
-    Capture stdout (any stdout output will be printed if there is a
-    failure.) This is the default behaviour. This switch is used to
-    override a configuration file setting.
+    Enable capture mode (stdout/stderr/log-output). Any capture output
+    will be printed on a failure/error.
 
-.. option:: --no-capture-stderr
+.. option:: --no-capture
 
-    Don't capture stderr (any stderr output will be printed immediately.)
+    Disable capture mode (stdout/stderr/log-output).
+
+.. option:: --capture-stdout
+
+    Enable capture of stdout.
+
+.. option:: --no-capture-stdout
+
+    Disable capture of stdout.
 
 .. option:: --capture-stderr
 
-    Capture stderr (any stderr output will be printed if there is a
-    failure.) This is the default behaviour. This switch is used to
-    override a configuration file setting.
+    Enable capture of stderr.
 
-.. option:: --no-logcapture
+.. option:: --no-capture-stderr
 
-    Don't capture logging. Logging configuration will be left intact.
+    Disable capture of stderr.
 
-.. option:: --logcapture
+.. option:: --capture-log, --logcapture
 
-    Capture logging. All logging during a step will be captured and
-    displayed in the event of a failure. This is the default
-    behaviour. This switch is used to override a configuration file
-    setting.
+    Enable capture of logging output.
 
-.. option:: --logging-level
+.. option:: --no-capture-log, --no-logcapture
+
+    Disable capture of logging output.
+
+.. option:: --capture-hooks
+
+    Enable capture of hooks (except: before_all).
+
+.. option:: --no-capture-hooks
+
+    Disable capture of hooks.
+
+.. option:: --logging-level LOG_LEVEL
 
     Specify a level to capture logging at. The default is INFO - capturing
     everything.
 
-.. option:: --logging-format
+.. option:: --logging-format LOG_FORMAT
 
     Specify custom format to print statements. Uses the same format as
     used by standard logging handlers. The default is
     "%(levelname)s:%(name)s:%(message)s".
 
-.. option:: --logging-datefmt
+.. option:: --logging-datefmt LOG_DATE_FORMAT
 
     Specify custom date/time format to print statements. Uses the same
     format as used by standard logging handlers.
 
-.. option:: --logging-filter
+.. option:: --logging-filter LOG_FILTER
 
     Specify which statements to filter in/out. By default, everything is
     captured. If the output is too verbose, use this option to filter
@@ -162,7 +174,11 @@ You may see the same information presented below at any time using ``behave
 
 .. option:: --logging-clear-handlers
 
-    Clear all other logging handlers.
+    Clear existing logging handlers (during capture-log).
+
+.. option:: --no-logging-clear-handlers
+
+    Keep existing logging handlers (during capture-log).
 
 .. option:: --no-summary
 
@@ -172,15 +188,19 @@ You may see the same information presented below at any time using ``behave
 
     Display the summary at the end of the run.
 
-.. option:: -o, --outfile
+.. option:: -o FILENAME, --outfile FILENAME
 
-    Write to specified file instead of stdout.
+    Write formatter output to output-file (default: stdout).
 
 .. option:: -q, --quiet
 
     Alias for --no-snippets --no-source.
 
-.. option:: -s, --no-source
+.. option:: -r RUNNER_CLASS, --runner RUNNER_CLASS
+
+    Use own runner class, like: "behave.runner:Runner"
+
+.. option:: --no-source
 
     Don't print the file and line of the step definition with the steps.
 
@@ -190,7 +210,7 @@ You may see the same information presented below at any time using ``behave
     the default behaviour. This switch is used to override a
     configuration file setting.
 
-.. option:: --stage
+.. option:: --stage TEXT
 
     Defines the current test stage. The test stage name is used as name
     prefix for the environment file and the steps directory (instead
@@ -200,10 +220,10 @@ You may see the same information presented below at any time using ``behave
 
     Stop running tests at the first failure.
 
-.. option:: -t, --tags
+.. option:: -t TAG_EXPRESSION, --tags TAG_EXPRESSION
 
     Only execute features or scenarios with tags matching TAG_EXPRESSION.
-    Pass "--tags-help" for more information.
+    Use :option:`--tags-help` option for more information.
 
 .. option:: -T, --no-timings
 
@@ -225,11 +245,7 @@ You may see the same information presented below at any time using ``behave
     formatter, do not capture stdout or logging output and stop at the
     first failure.
 
-.. option:: -x, --expand
-
-    Expand scenario outline tables in output.
-
-.. option:: --lang
+.. option:: --lang LANG
 
     Use keywords for a language other than English.
 
@@ -237,7 +253,7 @@ You may see the same information presented below at any time using ``behave
 
     List the languages available for --lang.
 
-.. option:: --lang-help
+.. option:: --lang-help LANG
 
     List the translations accepted for one language.
 
@@ -254,31 +270,32 @@ You may see the same information presented below at any time using ``behave
 Tag Expression
 --------------
 
-Scenarios inherit tags that are declared on the Feature level.
-The simplest TAG_EXPRESSION is simply a tag::
+TAG-EXPRESSIONS selects Features/Rules/Scenarios by using their tags.
+A TAG-EXPRESSION is a boolean expression that references some tags.
 
-    --tags=@dev
+EXAMPLES:
 
-You may even leave off the "@" - behave doesn't mind.
+    --tags=@smoke
+    --tags="not @xfail"
+    --tags="@smoke or @wip"
+    --tags="@smoke and @wip"
+    --tags="(@slow and not @fixme) or @smoke"
+    --tags="not (@fixme or @xfail)"
+    --tags="@smoke and {config.tags}"
 
-You can also exclude all features / scenarios that have a tag,
-by using boolean NOT::
+NOTES:
 
-    --tags="not @dev"
+* The tag-prefix "@" is optional.
+* An empty tag-expression is "true" (select-anything).
+* Use "{config.tags}" placeholder on command-line
+  to use tag-expressions from the config-file (from: "tags" or "default_tags").
 
-A tag expression can also use a logical OR::
+TAG-INHERITANCE:
 
-    --tags="@dev or @wip"
-
-The --tags option can be specified several times,
-and this represents logical AND,
-for instance this represents the boolean expression::
-
-    --tags="(@foo or not @bar) and @zap"
-
-You can also exclude several tags::
-
-    --tags="not (@fixme or @buggy)"
+* A Rule inherits the tags of its Feature
+* A Scenario inherits the tags of its Feature or Rule.
+* A Scenario of a ScenarioOutline/ScenarioTemplate inherit tags
+  from this ScenarioOutline/ScenarioTemplate and its Example table.
 
 
 .. _docid.behave.configuration-files:
@@ -286,9 +303,9 @@ You can also exclude several tags::
 Configuration Files
 ===================
 
-Configuration files for *behave* are called either ".behaverc",
-"behave.ini", "setup.cfg" or "tox.ini" (your preference) and are located in
-one of three places:
+Configuration files for *behave* are called either ".behaverc", "behave.ini",
+"setup.cfg", "tox.ini", or "pyproject.toml" (your preference) and are located
+in one of three places:
 
 1. the current working directory (good for per-project settings),
 2. your home directory ($HOME), or
@@ -303,13 +320,27 @@ formatted in the Windows INI style, for example:
 .. code-block:: ini
 
     [behave]
-    format=plain
-    logging_clear_handlers=yes
-    logging_filter=-suds
+    default_format = plain
+    default_tags = not (@xfail or @not_implemented)
+    junit = true
+    junit_directory = build/behave.reports
+    logging_level = WARNING
 
+Alternatively, if using "pyproject.toml" instead (note the "tool." prefix):
 
-Configuration Parameter Types
------------------------------
+.. code-block:: toml
+
+    [tool.behave]
+    default_format = "plain"
+    default_tags = "not (@xfail or @not_implemented)"
+    junit = true
+    junit_directory = "build/behave.reports"
+    logging_level = "WARNING"
+
+NOTE: toml does not support `'%'` interpolations.
+
+Configuration File Parameter Types
+----------------------------------
 
 The following types are supported (and used):
 
@@ -321,6 +352,7 @@ The following types are supported (and used):
     The text describes the functionality when the value is true.
     True values are "1", "yes", "true", and "on".
     False values are "0", "no", "false", and "off".
+    TOML: toml only accepts its native `true`
 
 **sequence<text>**
     These fields accept one or more values on new lines, for example a tag
@@ -334,193 +366,202 @@ The following types are supported (and used):
 
         --tags="(@foo or not @bar) and @zap"
 
+    TOML: toml can use arrays natively.
 
 
-Configuration Parameters
+Configuration File Parameters
 -----------------------------
 
 .. index::
-    single: configuration param; color
+    single: configuration file parameter; color
 
-.. describe:: color : text
+.. confval:: color : Colored (Enum)
 
-    Use ANSI color escapes. Defaults to %(const)r. This switch is used to
-    override a configuration file setting.
+    Use colored mode or not (default: auto).
 
 .. index::
-    single: configuration param; dry_run
+    single: configuration file parameter; dry_run
 
-.. describe:: dry_run : bool
+.. confval:: dry_run : bool
 
     Invokes formatters without executing the steps.
 
 .. index::
-    single: configuration param; userdata_defines
+    single: configuration file parameter; exclude_re
 
-.. describe:: userdata_defines : sequence<text>
-
-    Define user-specific data for the config.userdata dictionary. Example:
-    -D foo=bar to store it in config.userdata["foo"].
-
-.. index::
-    single: configuration param; exclude_re
-
-.. describe:: exclude_re : text
+.. confval:: exclude_re : text
 
     Don't run feature files matching regular expression PATTERN.
 
 .. index::
-    single: configuration param; include_re
+    single: configuration file parameter; include_re
 
-.. describe:: include_re : text
+.. confval:: include_re : text
 
     Only run feature files matching regular expression PATTERN.
 
 .. index::
-    single: configuration param; junit
+    single: configuration file parameter; junit
 
-.. describe:: junit : bool
+.. confval:: junit : bool
 
     Output JUnit-compatible reports. When junit is enabled, all stdout and
     stderr will be redirected and dumped to the junit report,
     regardless of the "--capture" and "--no-capture" options.
 
 .. index::
-    single: configuration param; junit_directory
+    single: configuration file parameter; junit_directory
 
-.. describe:: junit_directory : text
+.. confval:: junit_directory : text
 
     Directory in which to store JUnit reports.
 
 .. index::
-    single: configuration param; runner_class
+    single: configuration file parameter; jobs
 
-.. describe:: runner_class : text
+.. confval:: jobs : positive_number
 
-    Tells Behave to use a specific runner. (default: %(default)s)
+    Number of concurrent jobs to use (default: 1). Only supported by test
+    runners that support parallel execution.
 
 .. index::
-    single: configuration param; default_format
+    single: configuration file parameter; default_format
 
-.. describe:: default_format : text
+.. confval:: default_format : text
 
     Specify default formatter (default: pretty).
 
 .. index::
-    single: configuration param; format
+    single: configuration file parameter; format
 
-.. describe:: format : sequence<text>
+.. confval:: format : sequence<text>
 
     Specify a formatter. If none is specified the default formatter is
     used. Pass "--format help" to get a list of available formatters.
 
 .. index::
-    single: configuration param; steps_catalog
+    single: configuration file parameter; steps_catalog
 
-.. describe:: steps_catalog : bool
+.. confval:: steps_catalog : bool
 
-    Show a catalog of all available step definitions. SAME AS:
-    --format=steps.catalog --dry-run --no-summary -q
+    Show a catalog of all available step definitions. SAME AS: "--
+    format=steps.catalog --dry-run --no-summary -q".
 
 .. index::
-    single: configuration param; scenario_outline_annotation_schema
+    single: configuration file parameter; scenario_outline_annotation_schema
 
-.. describe:: scenario_outline_annotation_schema : text
+.. confval:: scenario_outline_annotation_schema : text
 
     Specify name annotation schema for scenario outline (default="{name}
     -- @{row.id} {examples.name}").
 
 .. index::
-    single: configuration param; show_skipped
+    single: configuration file parameter; use_nested_step_modules
 
-.. describe:: show_skipped : bool
+.. confval:: use_nested_step_modules : bool
+
+    Use subdirectories of steps directory to import steps (default:
+    false).
+
+.. index::
+    single: configuration file parameter; show_skipped
+
+.. confval:: show_skipped : bool
 
     Print skipped steps. This is the default behaviour. This switch is
     used to override a configuration file setting.
 
 .. index::
-    single: configuration param; show_snippets
+    single: configuration file parameter; show_snippets
 
-.. describe:: show_snippets : bool
+.. confval:: show_snippets : bool
 
     Print snippets for unimplemented steps. This is the default behaviour.
     This switch is used to override a configuration file setting.
 
 .. index::
-    single: configuration param; show_multiline
+    single: configuration file parameter; show_multiline
 
-.. describe:: show_multiline : bool
+.. confval:: show_multiline : bool
 
     Print multiline strings and tables under steps. This is the default
     behaviour. This switch is used to override a configuration file
     setting.
 
 .. index::
-    single: configuration param; name
+    single: configuration file parameter; name
 
-.. describe:: name : sequence<text>
+.. confval:: name : sequence<text>
 
     Select feature elements (scenarios, ...) to run which match part of
     the given name (regex pattern). If this option is given more than
     once, it will match against all the given names.
 
 .. index::
-    single: configuration param; stdout_capture
+    single: configuration file parameter; capture
 
-.. describe:: stdout_capture : bool
+.. confval:: capture : bool
 
-    Capture stdout (any stdout output will be printed if there is a
-    failure.) This is the default behaviour. This switch is used to
-    override a configuration file setting.
-
-.. index::
-    single: configuration param; stderr_capture
-
-.. describe:: stderr_capture : bool
-
-    Capture stderr (any stderr output will be printed if there is a
-    failure.) This is the default behaviour. This switch is used to
-    override a configuration file setting.
+    Enable capture mode (stdout/stderr/log-output). Any capture output
+    will be printed on a failure/error.
 
 .. index::
-    single: configuration param; log_capture
+    single: configuration file parameter; capture_stdout
 
-.. describe:: log_capture : bool
+.. confval:: capture_stdout : bool
 
-    Capture logging. All logging during a step will be captured and
-    displayed in the event of a failure. This is the default
-    behaviour. This switch is used to override a configuration file
-    setting.
+    Enable capture of stdout.
 
 .. index::
-    single: configuration param; logging_level
+    single: configuration file parameter; capture_stderr
 
-.. describe:: logging_level : text
+.. confval:: capture_stderr : bool
+
+    Enable capture of stderr.
+
+.. index::
+    single: configuration file parameter; capture_log
+
+.. confval:: capture_log : bool
+
+    Enable capture of logging output.
+
+.. index::
+    single: configuration file parameter; capture_hooks
+
+.. confval:: capture_hooks : bool
+
+    Enable capture of hooks (except: before_all).
+
+.. index::
+    single: configuration file parameter; logging_level
+
+.. confval:: logging_level : text
 
     Specify a level to capture logging at. The default is INFO - capturing
     everything.
 
 .. index::
-    single: configuration param; logging_format
+    single: configuration file parameter; logging_format
 
-.. describe:: logging_format : text
+.. confval:: logging_format : text
 
     Specify custom format to print statements. Uses the same format as
     used by standard logging handlers. The default is
     "%(levelname)s:%(name)s:%(message)s".
 
 .. index::
-    single: configuration param; logging_datefmt
+    single: configuration file parameter; logging_datefmt
 
-.. describe:: logging_datefmt : text
+.. confval:: logging_datefmt : text
 
     Specify custom date/time format to print statements. Uses the same
     format as used by standard logging handlers.
 
 .. index::
-    single: configuration param; logging_filter
+    single: configuration file parameter; logging_filter
 
-.. describe:: logging_filter : text
+.. confval:: logging_filter : text
 
     Specify which statements to filter in/out. By default, everything is
     captured. If the output is too verbose, use this option to filter
@@ -532,120 +573,227 @@ Configuration Parameters
     rather than included.
 
 .. index::
-    single: configuration param; logging_clear_handlers
+    single: configuration file parameter; logging_clear_handlers
 
-.. describe:: logging_clear_handlers : bool
+.. confval:: logging_clear_handlers : bool
 
-    Clear all other logging handlers.
+    Clear existing logging handlers (during capture-log).
 
 .. index::
-    single: configuration param; summary
+    single: configuration file parameter; summary
 
-.. describe:: summary : bool
+.. confval:: summary : bool
 
     Display the summary at the end of the run.
 
 .. index::
-    single: configuration param; outfiles
+    single: configuration file parameter; outfiles
 
-.. describe:: outfiles : sequence<text>
+.. confval:: outfiles : sequence<text>
 
-    Write to specified file instead of stdout.
+    Write formatter output to output-file (default: stdout).
 
 .. index::
-    single: configuration param; paths
+    single: configuration file parameter; paths
 
-.. describe:: paths : sequence<text>
+.. confval:: paths : sequence<text>
 
     Specify default feature paths, used when none are provided.
 
 .. index::
-    single: configuration param; quiet
+    single: configuration file parameter; tag_expression_protocol
 
-.. describe:: quiet : bool
+.. confval:: tag_expression_protocol : TagExpressionProtocol (Enum)
+
+    Specify the tag-expression protocol to use (default: auto_detect).
+    With "v1", only tag-expressions v1 are supported. With "v2", only
+    tag-expressions v2 are supported. With "auto_detect", tag-
+    expressions v1 and v2 are auto-detected.
+
+.. index::
+    single: configuration file parameter; quiet
+
+.. confval:: quiet : bool
 
     Alias for --no-snippets --no-source.
 
 .. index::
-    single: configuration param; show_source
+    single: configuration file parameter; runner
 
-.. describe:: show_source : bool
+.. confval:: runner : text
+
+    Use own runner class, like: "behave.runner:Runner"
+
+.. index::
+    single: configuration file parameter; show_source
+
+.. confval:: show_source : bool
 
     Print the file and line of the step definition with the steps. This is
     the default behaviour. This switch is used to override a
     configuration file setting.
 
 .. index::
-    single: configuration param; stage
+    single: configuration file parameter; stage
 
-.. describe:: stage : text
+.. confval:: stage : text
 
     Defines the current test stage. The test stage name is used as name
     prefix for the environment file and the steps directory (instead
     of default path names).
 
 .. index::
-    single: configuration param; stop
+    single: configuration file parameter; stop
 
-.. describe:: stop : bool
+.. confval:: stop : bool
 
     Stop running tests at the first failure.
 
 .. index::
-    single: configuration param; default_tags
+    single: configuration file parameter; default_tags
 
-.. describe:: default_tags : sequence<text>
+.. confval:: default_tags : sequence<text>
 
-    Define default tags when non are provided. See --tags for more
-    information.
+    Define default tags when non are provided. See :option:`--tags` for
+    more information.
 
 .. index::
-    single: configuration param; tags
+    single: configuration file parameter; tags
 
-.. describe:: tags : sequence<text>
+.. confval:: tags : sequence<text>
 
     Only execute certain features or scenarios based on the tag expression
     given. See below for how to code tag expressions in configuration
     files.
 
 .. index::
-    single: configuration param; show_timings
+    single: configuration file parameter; show_timings
 
-.. describe:: show_timings : bool
+.. confval:: show_timings : bool
 
     Print the time taken, in seconds, of each step after the step has
     completed. This is the default behaviour. This switch is used to
     override a configuration file setting.
 
 .. index::
-    single: configuration param; verbose
+    single: configuration file parameter; verbose
 
-.. describe:: verbose : bool
+.. confval:: verbose : bool
 
     Show the files and features loaded.
 
 .. index::
-    single: configuration param; wip
+    single: configuration file parameter; wip
 
-.. describe:: wip : bool
+.. confval:: wip : bool
 
     Only run scenarios tagged with "wip". Additionally: use the "plain"
     formatter, do not capture stdout or logging output and stop at the
     first failure.
 
 .. index::
-    single: configuration param; expand
+    single: configuration file parameter; lang
 
-.. describe:: expand : bool
-
-    Expand scenario outline tables in output.
-
-.. index::
-    single: configuration param; lang
-
-.. describe:: lang : text
+.. confval:: lang : text
 
     Use keywords for a language other than English.
 
 
+Additional Configuration File Sections
+--------------------------------------
+
+Section: behave.userdata
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section is used to define user-specific paramters (aka: userdata)
+for the config.userdata dictionary.
+
+.. code-block:: ini
+    :caption: FILE: behave.ini
+
+    [behave.userdata]
+    foo = Alice
+    bar = Bon
+
+Alternatively, if using "pyproject.toml":
+
+.. code-block:: toml
+    :caption: FILE: pyproject.toml
+
+    [tool.behave.userdata]
+    foo = "Alice"
+    bar = "Bob"
+
+which is the equivalent of the command-line usage:
+
+.. code-block:: shell
+    :caption: SHELL
+
+    behave -D foo=Alice -D bar=Bob ...
+
+See :doc:`userdata` for usage examples, type conversion and advanced use cases.
+
+
+Section: behave.formatters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This configuration file section is used to:
+
+* Define aliases for own formatters
+* Override the mapping of builtin formatters
+
+.. code-block:: ini
+    :caption: FILE: behave.ini
+
+    [behave.formatters]
+    allure = allure_behave.formatter:AllureFormatter
+    html   = behave_html_formatter:HTMLFormatter
+    html-pretty = behave_html_pretty_formatter:PrettyHTMLFormatter
+
+.. code-block:: toml
+    :caption: FILE: pyproject.toml
+
+    [tool.behave.formatters]
+    allure = "allure_behave.formatter:AllureFormatter"
+    html   = "behave_html_formatter:HTMLFormatter"
+    html-pretty = "behave_html_pretty_formatter:PrettyHTMLFormatter"
+
+You can then use this formatter alias on the command-line (or in the config-file):
+
+.. code-block:: shell
+    :caption: SHELL
+
+    behave -f html --output=report.html ...
+
+See :ref:`id.appendix.formatters` for more information.
+
+
+Section: behave.runners
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This configuration file section is used to:
+
+* Define aliases for own test runners
+* Override the mapping of builtin test runners
+
+.. code-block:: ini
+    :caption: FILE: behave.ini
+
+    [behave.runners]
+    mine = behave4me.runner:SuperDuperRunner
+
+.. code-block:: toml
+    :caption: FILE: pyproject.toml
+
+    [behave.runners]
+    mine = "behave4me.runner:SuperDuperRunner"
+
+You can then use this runner alias on the command-line:
+
+.. code-block:: shell
+    :caption: SHELL
+
+    behave --runner=mine ...
+
+See :ref:`id.appendix.runners` for more information.
 

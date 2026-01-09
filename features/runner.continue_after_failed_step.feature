@@ -75,22 +75,22 @@ Feature: Runner should continue after a failed step
 
           0 features passed, 1 failed, 0 skipped
           1 scenario passed, 2 failed, 0 skipped
-          6 steps passed, 3 failed, 0 skipped, 0 undefined
+          6 steps passed, 3 failed, 0 skipped
           """
       And the command output should contain:
           """
           Scenario: Fails in second step
               Given a step passes ... passed
               When second step fails ... failed
-                Assertion Failed: XFAIL (in: second step)
+                ASSERT FAILED: XFAIL (in: second step)
               Then another step passes ... passed
 
           Scenario: Fails in first and third step
             Given first step fails ... failed
-              Assertion Failed: XFAIL (in: first step)
+              ASSERT FAILED: XFAIL (in: first step)
             When second step passes ... passed
             Then third step fails ... failed
-              Assertion Failed: XFAIL (in: third step)
+              ASSERT FAILED: XFAIL (in: third step)
           """
       But note that "step execution continues after failed step(s)"
       And note that "no steps are skipped"
@@ -115,21 +115,21 @@ Feature: Runner should continue after a failed step
 
           0 features passed, 1 failed, 0 skipped
           1 scenario passed, 2 failed, 0 skipped
-          5 steps passed, 3 failed, 1 skipped, 0 undefined
+          5 steps passed, 3 failed, 1 skipped
           """
       And the command output should contain:
           """
           Scenario: Fails in second step
             Given a step passes ... passed
             When second step fails ... failed
-              Assertion Failed: XFAIL (in: second step)
+              ASSERT FAILED: XFAIL (in: second step)
 
           Scenario: Fails in first and third step
             Given first step fails ... failed
-              Assertion Failed: XFAIL (in: first step)
+              ASSERT FAILED: XFAIL (in: first step)
             When second step passes ... passed
             Then third step fails ... failed
-              Assertion Failed: XFAIL (in: third step)
+              ASSERT FAILED: XFAIL (in: third step)
           """
       But note that "step execution continues after failed step in tagged scenario only"
       And note that "some steps are skipped (in 2nd, untagged scenario)"

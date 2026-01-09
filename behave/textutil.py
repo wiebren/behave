@@ -5,9 +5,11 @@ Provides some utility functions related to text processing.
 
 from __future__ import absolute_import, print_function
 import codecs
+import io
 import os
 import sys
 import six
+
 
 # -----------------------------------------------------------------------------
 # CONSTANTS:
@@ -24,8 +26,10 @@ def make_indentation(indent_size, part=u" "):
     return indent_size * part
 
 
-def indent(text, prefix):   # pylint: disable=redefined-outer-name
-    """Indent text or a number of text lines (with newline).
+# -- SIMILAR: textwrap.indent() -- SINCE: Python 3.3
+def indent(text, prefix):  # pylint: disable=redefined-outer-name
+    """
+    Indent text or a number of text lines (with newline).
 
     :param lines:  Text lines to indent (as string or list of strings).
     :param prefix: Line prefix to use (as string).
@@ -39,7 +43,7 @@ def indent(text, prefix):   # pylint: disable=redefined-outer-name
         # -- TEXT LINES: Without trailing new-line.
         newline = u"\n"
     # MAYBE: return newline.join([prefix + six.text_type(line, errors="replace")
-    return newline.join([prefix + six.text_type(line)  for line in lines])
+    return newline.join([prefix + six.text_type(line) for line in lines])
 
 
 def compute_words_maxsize(words):
@@ -53,6 +57,22 @@ def compute_words_maxsize(words):
         if len(word) > max_size:
             max_size = len(word)
     return max_size
+
+
+def text_encoding(encoding=None):
+    """
+    Compatibility adapter to :func:`io.text_encoding()`.
+
+    :param encoding:  Encoding to use.
+    :return: Selected encoding.
+
+    .. versionadded:: 1.2.7
+    """
+    # -- SINCE: Python 3.10 -- io.text_encoding()
+    text_encoding_func = getattr(io, "text_encoding", None)
+    if text_encoding_func is None:
+        text_encoding_func = lambda x: x or "utf-8"  # noqa: E731
+    return text_encoding_func(encoding)
 
 
 def is_ascii_encoding(encoding):
@@ -123,7 +143,7 @@ def text(value, encoding=None, errors=None):
             if six.PY2:
                 try:
                     text2 = six.text_type(value)
-                except UnicodeError as e:
+                except UnicodeError:
                     # -- NOTE: value has no sane unicode conversion
                     #  encoding=unicode-escape helps recover from errors.
                     data = str(value)
@@ -140,7 +160,7 @@ def text(value, encoding=None, errors=None):
 def to_texts(args, encoding=None, errors=None):
     """Process a list of string-like objects into list of unicode values.
     Optionally converts binary text into unicode for each item.
-    
+
     :return: List of text/unicode values.
     """
     if encoding is None:

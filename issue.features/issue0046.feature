@@ -27,12 +27,12 @@ Feature: Issue #46 Behave returns 0 (SUCCESS) even in case of test failures
         Scenario: Passing Scenario Example
           Given passing
       """
-    When I run "behave -c -q features/passing.feature"
+    When I run "behave --no-color -q features/passing.feature"
     Then it should pass with:
       """
       1 feature passed, 0 failed, 0 skipped
       1 scenario passed, 0 failed, 0 skipped
-      1 step passed, 0 failed, 0 skipped, 0 undefined
+      1 step passed, 0 failed, 0 skipped
       """
 
   Scenario: Failing Execution
@@ -42,12 +42,12 @@ Feature: Issue #46 Behave returns 0 (SUCCESS) even in case of test failures
         Scenario: Failing Scenario Example
           Given failing
       """
-    When I run "behave -c -q features/failing.feature"
+    When I run "behave --no-color -q features/failing.feature"
     Then it should fail with:
       """
       0 features passed, 1 failed, 0 skipped
       0 scenarios passed, 1 failed, 0 skipped
-      0 steps passed, 1 failed, 0 skipped, 0 undefined
+      0 steps passed, 1 failed, 0 skipped
       """
 
   Scenario: Passing and Failing Execution
@@ -59,12 +59,12 @@ Feature: Issue #46 Behave returns 0 (SUCCESS) even in case of test failures
         Scenario: Failing Scenario Example
           Given failing
       """
-    When I run "behave -c -q features/passing_and_failing.feature"
+    When I run "behave --no-color -q features/passing_and_failing.feature"
     Then it should fail with:
       """
       0 features passed, 1 failed, 0 skipped
       1 scenario passed, 1 failed, 0 skipped
-      1 step passed, 1 failed, 0 skipped, 0 undefined
+      1 step passed, 1 failed, 0 skipped
       """
     And the command output should contain:
       """
@@ -73,5 +73,5 @@ Feature: Issue #46 Behave returns 0 (SUCCESS) even in case of test failures
           Given passing
         Scenario: Failing Scenario Example
           Given failing
-            Assertion Failed: failing
+            ASSERT FAILED: failing
       """

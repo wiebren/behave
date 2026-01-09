@@ -11,7 +11,9 @@ REQUIRES: Python >= 2.6 (json module is part of Python standard library)
 from __future__ import absolute_import
 import codecs
 from behave import model
-from behave.model_core import Status
+from behave._types import require_type
+from behave.model_type import Status
+
 try:
     import json
 except ImportError:
@@ -49,7 +51,7 @@ class JsonParser(object):
         self.current_scenario_outline = None
 
     def parse_features(self, json_data):
-        assert isinstance(json_data, list)
+        require_type(json_data, list)
         features = []
         json_features = json_data
         for json_feature in json_features:

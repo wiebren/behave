@@ -10,13 +10,15 @@ Feature: Command-line options: Use behave --lang-list
     When I run "behave --lang-list"
     Then it should pass with:
         """
-        Languages available:
+        AVAILABLE LANGUAGES:
           af: Afrikaans / Afrikaans
           am: հայերեն / Armenian
+          amh: አማርኛ / Amharic
           an: Aragonés / Aragonese
           ar: العربية / Arabic
           ast: asturianu / Asturian
           az: Azərbaycanca / Azerbaijani
+          be: Беларуская / Belarusian
           bg: български / Bulgarian
           bm: Bahasa Melayu / Malay
           bs: Bosanski / Bosnian
@@ -53,7 +55,7 @@ Feature: Command-line options: Use behave --lang-list
           it: italiano / Italian
           ja: 日本語 / Japanese
           jv: Basa Jawa / Javanese
-          ka: ქართველი / Georgian
+          ka: ქართული / Georgian
           kn: ಕನ್ನಡ / Kannada
           ko: 한국어 / Korean
           lt: lietuvių kalba / Lithuanian
@@ -61,6 +63,7 @@ Feature: Command-line options: Use behave --lang-list
           lv: latviešu / Latvian
           mk-Cyrl: Македонски / Macedonian
           mk-Latn: Makedonski (Latinica) / Macedonian (Latin)
+          ml: മലയാളം / Malayalam
           mn: монгол / Mongolian
           mr: मराठी / Marathi
           ne: नेपाली / Nepali

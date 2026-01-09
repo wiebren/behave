@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# FILE: issue.features/environemnt.py
+# FILE: issue.features/environment.py
 # pylint: disable=unused-argument
 """
 Functionality:
@@ -10,12 +10,11 @@ Functionality:
 
 from __future__ import absolute_import, print_function
 import sys
-import platform
 import os.path
-import six
+from behave.active_tag.python import \
+    ACTIVE_TAG_VALUE_PROVIDER as ACTIVE_TAG_VALUE_PROVIDER4PYTHON
 from behave.tag_matcher import ActiveTagMatcher, print_active_tags
 from behave4cmd0.setup_command_shell import setup_command_shell_processors4behave
-# PREPARED: from behave.tag_matcher import setup_active_tag_values
 
 
 # ---------------------------------------------------------------------------
@@ -79,41 +78,39 @@ def discover_ci_server():
 # NOTE: active_tag_value_provider provides category values for active tags.
 python_version = "%s.%s" % sys.version_info[:2]
 active_tag_value_provider = {
-    "platform": sys.platform,
-    "python2": str(six.PY2).lower(),
-    "python3": str(six.PY3).lower(),
-    "python.version": python_version,
-    # -- python.implementation: cpython, pypy, jython, ironpython
-    "python.implementation": platform.python_implementation().lower(),
-    "pypy":    str("__pypy__" in sys.modules).lower(),
-    "os":      sys.platform,
     "xmllint": as_bool_string(require_tool("xmllint")),
     "ci": discover_ci_server()
 }
+active_tag_value_provider.update(ACTIVE_TAG_VALUE_PROVIDER4PYTHON)
 active_tag_matcher = ActiveTagMatcher(active_tag_value_provider)
 
 
 def print_active_tags_summary():
-    print_active_tags(active_tag_value_provider, ["python.version", "os"])
+    print_active_tags(active_tag_value_provider, [
+        "python.version", "python.implementation", "os"
+    ])
 
 
 # ---------------------------------------------------------------------------
 # BEHAVE HOOKS:
 # ---------------------------------------------------------------------------
-def before_all(context):
+def before_all(ctx):
     # -- SETUP ACTIVE-TAG MATCHER (with userdata):
     # USE: behave -D browser=safari ...
     # NOT-NEEDED:
-    # setup_active_tag_values(active_tag_value_provider, context.config.userdata)
+    # setup_active_tag_values(active_tag_value_provider, ctx.config.userdata)
     setup_command_shell_processors4behave()
     print_active_tags_summary()
 
 
-def before_feature(context, feature):
-    if active_tag_matcher.should_exclude_with(feature.tags):
-        feature.skip(reason=active_tag_matcher.exclude_reason)
+def before_feature(ctx, feature):
+    if active_tag_matcher.should_skip(feature):
+        feature.skip(reason=active_tag_matcher.skip_reason)
 
+def before_rule(ctx, rule):
+    if active_tag_matcher.should_skip(rule):
+        rule.skip(reason=active_tag_matcher.skip_reason)
 
-def before_scenario(context, scenario):
-    if active_tag_matcher.should_exclude_with(scenario.effective_tags):
-        scenario.skip(reason=active_tag_matcher.exclude_reason)
+def before_scenario(ctx, scenario):
+    if active_tag_matcher.should_skip(scenario):
+        scenario.skip(reason=active_tag_matcher.skip_reason)

@@ -8,7 +8,7 @@ Show all tasks with::
 
 .. seealso::
 
-    * http://pyinvoke.org
+    * https://pyinvoke.org
     * https://github.com/pyinvoke/invoke
 """
 
@@ -28,15 +28,20 @@ TOPDIR = os.path.join(os.path.dirname(__file__), "..")
 TOPDIR = os.path.abspath(TOPDIR)
 sys.path.insert(0, TOPDIR)
 
+# -- MONKEYPATCH: path module
+from ._path import monkeypatch_path_if_needed
+monkeypatch_path_if_needed()
+
 # -----------------------------------------------------------------------------
 # IMPORTS:
 # -----------------------------------------------------------------------------
+# ruff: noqa: E402
 import sys
 from invoke import Collection
 
 # -- TASK-LIBRARY:
-# PREPARED: import invoke_cleanup as cleanup
-from . import invoke_cleanup as cleanup
+# DISABLED: from . import invoke_cleanup as cleanup
+import invoke_cleanup as cleanup
 from . import docs
 from . import test
 from . import release

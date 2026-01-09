@@ -41,11 +41,11 @@ Feature: Issue #40 Test Summary Scenario/Step Counts are incorrect for Scenario 
             |Alice|
             |Bob  |
       """
-    When I run "behave -c -f plain features/issue40_1.feature"
+    When I run "behave --no-color -f plain features/issue40_1.feature"
     Then it should pass with:
       """
       2 scenarios passed, 0 failed, 0 skipped
-      6 steps passed, 0 failed, 0 skipped, 0 undefined
+      6 steps passed, 0 failed, 0 skipped
       """
 
   Scenario: ScenarioOutline with Failing Given-Steps
@@ -62,11 +62,11 @@ Feature: Issue #40 Test Summary Scenario/Step Counts are incorrect for Scenario 
             |Alice|
             |Bob  |
       """
-    When I run "behave -c -f plain features/issue40_2G.feature"
+    When I run "behave --no-color -f plain features/issue40_2G.feature"
     Then it should fail with:
       """
       0 scenarios passed, 2 failed, 0 skipped
-      0 steps passed, 2 failed, 4 skipped, 0 undefined
+      0 steps passed, 2 failed, 4 skipped
       """
 
   Scenario: ScenarioOutline with Failing When-Steps
@@ -83,11 +83,11 @@ Feature: Issue #40 Test Summary Scenario/Step Counts are incorrect for Scenario 
             |Alice|
             |Bob  |
       """
-    When I run "behave -c -f plain features/issue40_2W.feature"
+    When I run "behave --no-color -f plain features/issue40_2W.feature"
     Then it should fail with:
       """
       0 scenarios passed, 2 failed, 0 skipped
-      2 steps passed, 2 failed, 2 skipped, 0 undefined
+      2 steps passed, 2 failed, 2 skipped
       """
 
   Scenario: ScenarioOutline with Failing Then-Steps
@@ -104,11 +104,11 @@ Feature: Issue #40 Test Summary Scenario/Step Counts are incorrect for Scenario 
             |Alice|
             |Bob  |
       """
-    When I run "behave -c -f plain features/issue40_2T.feature"
+    When I run "behave --no-color -f plain features/issue40_2T.feature"
     Then it should fail with:
       """
       0 scenarios passed, 2 failed, 0 skipped
-      4 steps passed, 2 failed, 0 skipped, 0 undefined
+      4 steps passed, 2 failed, 0 skipped
       """
 
   Scenario: ScenarioOutline with Mismatched When-Step Example Row
@@ -125,11 +125,11 @@ Feature: Issue #40 Test Summary Scenario/Step Counts are incorrect for Scenario 
             |Alice|
             |Bob  |
       """
-    When I run "behave -c -f plain features/issue40_3W.feature"
+    When I run "behave --no-color -f plain features/issue40_3W.feature"
     Then it should fail with:
       """
       1 scenario passed, 1 failed, 0 skipped
-      4 steps passed, 1 failed, 1 skipped, 0 undefined
+      4 steps passed, 1 failed, 1 skipped
       """
 
   Scenario: ScenarioOutline with Mismatched Then-Step Example Row
@@ -146,9 +146,9 @@ Feature: Issue #40 Test Summary Scenario/Step Counts are incorrect for Scenario 
             |Alice|
             |Bob  |
       """
-    When I run "behave -c -f plain features/issue40_3W.feature"
+    When I run "behave --no-color -f plain features/issue40_3W.feature"
     Then it should fail with:
       """
       1 scenario passed, 1 failed, 0 skipped
-      5 steps passed, 1 failed, 0 skipped, 0 undefined
+      5 steps passed, 1 failed, 0 skipped
       """

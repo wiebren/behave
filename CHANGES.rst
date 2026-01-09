@@ -1,7 +1,116 @@
 Version History
 ===============================================================================
 
-Version: 1.2.7 (unreleased)
+Version: 1.4.0 (unreleased)
+-------------------------------------------------------------------------------
+
+GOALS:
+
+* Support Python >= 3.10 (or newer)
+* Drop support for Python 2.7
+* Drop support for Python 3.9 (and below)
+
+DEPRECATIONS:
+
+* DEPRECATED: ``tag-expressions v1`` (old-style tag-expressions support is removed).
+
+CHANGED:
+
+* Use "use_nested_step_modules = False" now by default (merged from: v1.3.2).
+
+FIXED:
+
+* Include changes from ``behave v1.3.1`` (#1255, #1239)
+* issue #1028: use unittest.mock instead of mock (submitted by: pgajdos)
+
+DOCUMENTATION:
+
+* Improve command-line option descriptions (show: value).
+* Use "confval" directive for config-file parameters.
+* api: Add "Configuration" class description.
+* pull #1258: fixed dead links in documentation (provided by: sgronlund)
+* Include changes from ``behave v1.3.1`` (#1256, #1233)
+
+DEVELOP:
+
+* behave4cmd0: Update version info to v1.4.0
+* behave4cmd0.command_shell: Cleanup of BEHAVE_CMD value usage.
+
+
+Version: 1.3.3 (2025-09-04, branch=release/v1.3.x)
+-------------------------------------------------------------------------------
+
+FIXED:
+
+* issue #1270: v1.3.2: Broke Python 2.7 support (submitted by: silent-observer)
+
+
+Version: 1.3.2 (2025-08-29, branch=release/v1.3.x)
+-------------------------------------------------------------------------------
+
+CHANGED:
+
+* Recursive discovery and import in `steps` directory is now disabled by default.
+  An expert user can enable this feature again (if he/she knows what he/she is doing).
+  RELATED TO: #1210 -- Multiple, nested steps directories under steps directory.
+
+  - REASON: Too many problems w/ Python packages using relative-imports in the `steps` directory.
+  - BEST PRACTICE: Put a Python package or step-library on the Python search path, but not in the `steps` directory.
+
+DOCUMENTATION:
+
+* RTFD: Enable PDF output format again (for download).
+* Improve command-line option descriptions (show: value).
+* Use "confval" directive for config-file parameters.
+* api: Add "Configuration" class description.
+* Include changes from pull #1258
+* Fix more deadlinks in docs
+
+DEVELOP:
+
+* behave4cmd0: Update version info to v1.3.1
+* behave4cmd0.command_shell: Cleanup of BEHAVE_CMD value usage.
+
+CI:
+
+* Update to python-version: "3.14.0-rc.2" (was: "3.14.0-rc.1")
+* Update actions/checkout to v5 (was: v4).
+* Use astral-sh/setup-uv@v6 (was: v3).
+
+
+Version: 1.3.1 (2025-08-11, branch=release/v1.3.x)
+-------------------------------------------------------------------------------
+
+FIXED:
+
+* issue #1255: ImportError: cannot import name 'asynccontextmanager' not found in python 3.6 (submitted by: rzuckerm)
+* issue #1239: AmbiguousStep error on step import with "re" step-matcher (submitted by: VolodymyrDan00)
+
+DOCUMENTATION:
+
+* Appendix: Add section with description of "Runners" extension point.
+* Appendix: Add section with "Cucumber-Expressions".
+* Include changes from pull #1258
+* pull  #1256: docs: userdata (provided by: Therdel, fixes: #1234)
+* issue #1234: userdata_defines configuration file parameter is not up to date (submitted by: vvavrychuk)
+
+
+Version: 1.3.0 (2025-08-04)
+-------------------------------------------------------------------------------
+
+BASED ON: ``Version 1.2.7`` changes
+
+GOALS:
+
+* Will be released on https://pypi.org
+* Include all changes from behave v1.2.7 development
+* Last version minor version with Python 2.7 support
+* ``tag-expressions v2``: Enabled by default ("strict" mode: only v2 supported).
+* ``tag-expressions v1``: Disabled by default (in "strict" mode).
+   BUT: Can be enabled via config-file parameter in "any" mode (supports: v1 and v2).
+
+
+Version: 1.2.7 (part of: 1.3.0)
 -------------------------------------------------------------------------------
 
 BACKWARD-INCOMPATIBLE:
@@ -13,6 +122,12 @@ BACKWARD-INCOMPATIBLE:
   - DEPRECATING: ``tag-expressions v1`` (old-style)
   - BUT: Currently, tag-expression version is automatically detected (and used).
 
+* CLI: Cleanup command-line short-options that are seldom used
+  (short-options for: --no-skipped (-k), --no-multiline (-m), --no-source (-s)).
+
+* parser: No longer strips trailing colon from steps with text/table section.
+* Undefined steps need to use StepNotImplementedError (was: NotImplementedError)
+
 GOALS:
 
 - Improve support for Windows (continued)
@@ -23,22 +138,42 @@ DEVELOPMENT:
 
 * Renamed default branch of Git repository to "main" (was: "master").
 * Use github-actions as CI/CD pipeline (and remove Travis as CI).
+* CI: Remove python.version=2.7 for CI pipeline
+  (reason: No longer supported by Github Actions, date: 2023-07).
+* ADDED: pyproject.toml support (hint: "setup.py" will become DEPRECATED soon)
 
 CLEANUPS:
 
+* CLI: Remove unused option ``--expand``
 * Remove ``stdout_capture``, ``stderr_capture``, ``log_capture``
   attributes from ``behave.runner.Context`` class
   (use: ``captured`` attribute instead).
+* Remove ``@asyncio.coroutine`` decorator examples and tests.
 
 ENHANCEMENTS:
 
+* Async-steps: Now directly supported by step decorators.
+* logging: Simplify logging to a file in ``Configuration.setup_logging()``.
+* logging: Support additional log-format styles, not only percent-style (since: Python 3.2).
+* Add support for step-definitions (step-matchers) with `CucumberExpressions`_
+* Add formatter: steps.code -- Shows steps with code-section.
+* User-defined formatters: Improve diagnostics if bad formatter is used (ModuleNotFound, ...)
+* active-tags: Added ``ValueObject`` class for enhanced control of comparison mechanism
+  (supports: equals, less-than, less-or-equal, greater-than, greater-or-equal, contains, ...)
 * Add support for Gherkin v6 grammar and syntax in ``*.feature`` files
-* Use `cucumber-tag-expressions`_ with tag-matching extension (superceeds: old-style tag-expressions)
+* Use `cucumber-tag-expressions`_ with tag-matching extension (supersedes: old-style tag-expressions)
 * Use cucumber "gherkin-languages.json" now (simplify: Gherkin v6 aliases, language usage)
 * Support emojis in ``*.feature`` files and steps
 * Select-by-location: Add support for "Scenario container" (Feature, Rule, ScenarioOutline) (related to: #391)
+* issue #1246: ScenarioOutline: Support template placeholders in ExamplesTable.tags (provided-by: jenisys)
+* pull #1210: Multiple, nested steps directories under steps directory (provided by: dron4ik86).
+* pull #1185: Read Examples table data from CSV file (provided-by: rajanmanwansh)
+* issue #1183: Support Background Steps with Placeholders for Scenario Outlines (submitted by: hemendra0851)
+* pull #1097: Support And-Step as initial Scenario step if Background Steps exist (provided-by: aneeshdurg)
 * pull  #988: setup.py: Add category to install additional formatters (html) (provided-by: bittner)
+* issue #979: Captured log to outfile (submitted by: janoskut)
 * pull  #895: UPDATE: i18n/gherkin-languages.json from cucumber repository #895 (related to: #827)
+* issue #889: Warn or error about incorrectly configured formatter aliases (provided by: jenisys, submitted by: bittner)
 * pull  #827: Fixed keyword translation in Estonian #827 (provided by: ookull)
 * issue #740: Enhancement: possibility to add cleanup to be called upon leaving outer context stack frames (submitted by: nizwiz, dcvmoole)
 * issue #678: Scenario Outline: Support tags with commas and semicolons (provided by: lawnmowerlatte, pull #679)
@@ -50,10 +185,28 @@ CLARIFICATION:
 
 FIXED:
 
-* FIXED: Some tests related to python3.9
+* FIXED: Some tests for python-3.12
+* FIXED: Some tests related to python-3.11
+* FIXED: Some tests related to python-3.9
 * FIXED: active-tag logic if multiple tags with same category exists.
+* issue #1252: Wrong encoding of Unicode text (czech diacritics) in html report (submitted by: freetomik)
+* issue #1251; Installation with pip does not install dependencies (submitted by: marcindulak)
+* pull  #1249: Fixed having one event loop per async step for python >= 3.10 (provided-by: jeteve; partial)
+* issue #1233; RuntimeError: Event loop is closed" in asyncio streams (submitted by: rdpoor)
+* issue #1231: TypeConverter error causes error in "pretty" formatter (provided-by: rittneje)
+* issue #1202: behave fails with pyproject.toml without any [tool] sections (provided by: con-fah)
+* issue #1177: Bad type-converter pattern: MatchWithError is turned into AmbiguousStep (submitted by: omrischwarz)
+* issue #1170: TagExpression auto-detection is not working properly (submitted by: Luca-morphy)
+* issue #1154: Config-files are not shown in verbose mode (submitted by: soblom)
+* issue #1120: Logging ignoring level set in setup_logging (submitted by: j7an)
+* issue #1070: Color support detection: Fails for WindowsTerminal (provided by: jenisys)
+* issue #1116: behave erroring in pretty format in pyproject.toml (submitted by: morning-sunn)
+* issue #1061: Scenario should inherit Rule tags (submitted by: testgitdl)
+* issue #1054: TagExpressions v2: AND concatenation is faulty (submitted by: janoskut)
 * pull  #967: Update __init__.py in behave import to fix pylint (provided by: dsayling)
 * issue #955: setup: Remove attribute 'use_2to3' (submitted by: krisgesling)
+* issue #948: Add support for value substitution in logging config file (submitted by: kowalcj0)
+* issue #783: Logging within the environment.py and Fixtures.py doesn't output (submitted by: MichaelAGill)
 * issue #772: ScenarioOutline.Examples without table (submitted by: The-QA-Geek)
 * issue #755: Failures with Python 3.8 (submitted by: hroncok)
 * issue #725: Scenario Outline description lines seem to be ignored (submitted by: nizwiz)
@@ -66,7 +219,9 @@ FIXED:
 
 MINOR:
 
+* pull  #1214: FIX test_configuration.py: Explicitly provide args ... pytest (provided by: shivaraj-bh)
 * issue #1047: Step type is inherited for generic step if possible (submitted by: zettseb)
+* issue #958: Replace dashes with underscores to comply with setuptools v54.1.0 #958 (submitted by: arrooney)
 * issue #800: Cleanups related to Gherkin parser/ParseError question (submitted by: otstanteplz)
 * pull  #767: FIX: use_fixture_by_tag didn't return the actual fixture in all cases (provided by: jgentil)
 * pull  #751: gherkin: Adding Rule keyword translation in portuguese and spanish to gherkin-languages.json (provided by: dunossauro)
@@ -76,24 +231,29 @@ MINOR:
 
 DOCUMENTATION:
 
-* pull  #989: Add more tutorial links: Nicole Harris, Nick Coghlan (provided by: ncoghlan, bittner; related: #848)
-* pull  #877: docs: API reference - Capitalizing Step Keywords in example (provided by: Ibrian93)
-* pull  #731: Update links to Django docs (provided by: bittner)
-* pull  #722: DOC remove remaining pythonhosted links (provided by: leszekhanusz)
-* pull  #701: behave/runner.py docstrings (provided by: spitGlued)
-* pull  #700: Fix wording of "gherkin.rst" (provided by: spitGlued)
-* pull  #699: Fix wording of "philosophy.rst" (provided by: spitGlued)
-* pull  #684: Fix typo in "install.rst" (provided by: mstred)
-* pull  #628: Changed pythonhosted.org links to readthedocs.io (provided by: chrisbrake)
+* pull #1215: Adding html-pretty formatter documentation entry (provided by: modehnal)
+* pull #1166: Document behave ecosystem VSCode IDE support (provided by: kieran-ryan)
+* pull #1162: Tutorial: Change Given to When step where Given step is not a setup step (provided by: justintaylor)
+* pull #989: Add more tutorial links: Nicole Harris, Nick Coghlan (provided by: ncoghlan, bittner; related: #848)
+* pull #877: docs: API reference - Capitalizing Step Keywords in example (provided by: Ibrian93)
+* pull #731: Update links to Django docs (provided by: bittner)
+* pull #722: DOC remove remaining pythonhosted links (provided by: leszekhanusz)
+* pull #701: behave/runner.py docstrings (provided by: spitGlued)
+* pull #700: Fix wording of "gherkin.rst" (provided by: spitGlued)
+* pull #699: Fix wording of "philosophy.rst" (provided by: spitGlued)
+* pull #684: Fix typo in "install.rst" (provided by: mstred)
+* pull #628: Changed pythonhosted.org links to readthedocs.io (provided by: chrisbrake)
 
 BREAKING CHANGES (naming):
 
-* behave.runner.Context._push(layer=None): Was Context._push(layer_name=None)
+* behave.configuration.OPTIONS: was ``behave.configuration.options``
+* behave.runner.Context._push(layer=None): was Context._push(layer_name=None)
 * behave.runner.scoped_context_layer(context, layer=None):
-  Was scoped_context_layer(context.layer_name=None)
+  was scoped_context_layer(context.layer_name=None)
 
 
 .. _`cucumber-tag-expressions`: https://pypi.org/project/cucumber-tag-expressions/
+.. _`CucumberExpressions`: https://github.com/cucumber/cucumber-expressions
 
 
 Version: 1.2.6 (2018-02-25)
@@ -202,7 +362,7 @@ FIXED:
 * pull  #382: fix typo in tag name (provided by: zsoldosp)
 * issue #361: utf8 file with BOM (provided by: karulis)
 * issue #349: ScenarioOutline skipped with --format=json
-* issue #336: Stacktrace contents getting illegal characters inserted with text function (submited by: fj40bryan)
+* issue #336: Stacktrace contents getting illegal characters inserted with text function (submitted by: fj40bryan)
 * issue #330: Skipped scenarios are included in junit reports when --no-skipped is specified (provided by: vrutkovs, pull #331)
 * issue #320: Userdata is case-insensitive when read from config file (provided by: mixxorz)
 * issue #319: python-version requirements in behave.whl for Python2.6 (submitted by: darkfoxprime)
@@ -254,7 +414,7 @@ ENHANCEMENTS:
   * issue #242: JUnitReporter can show scenario tags (provided by: rigomes)
   * issue #240: Test Stages with different step implementations (provided by: attilammagyar, jenisys)
   * issue #238: Allow to skip scenario in step function (provided by: hotgloupi, jenisys)
-  * issue #228: Exclude scenario fron run (provided by: jdeppe, jenisys)
+  * issue #228: Exclude scenario from run (provided by: jdeppe, jenisys)
   * issue #227: Add a way to add command line options to behave (provided by: attilammagyar, jenisys)
 
 FIXED:
@@ -527,7 +687,7 @@ RESOLVED:
 
 REJECTED:
 
-  * issue #109: Insists that implemented tests are not implemented (not reproducable)
+  * issue #109: Insists that implemented tests are not implemented (not reproducible)
   * issue #100: Forked package installs but won't run on RHEL.
   * issue #88: Python 3 compatibility changes (=> use 2to3 tool instead).
 

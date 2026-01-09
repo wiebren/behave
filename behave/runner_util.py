@@ -1,21 +1,31 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
+# pylint: disable=redundant-u-string-prefix
+# pylint: disable=consider-using-f-string
+# pylint: disable=useless-object-inheritance
 """
 Contains utility functions and classes for Runners.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from bisect import bisect
+from collections import OrderedDict
 import glob
 import os.path
 import re
 import sys
 from six import string_types
-from behave import parser
-from behave.exception import \
-    FileNotFoundError, InvalidFileLocationError, InvalidFilenameError
-from behave.model_core import FileLocation
+
+from behave import parser as gherkin
+from behave._types import require_type, require_not_none
+from behave.exception import (
+    FileNotFoundError,  # pylint: disable=W0622
+    InvalidFileLocationError,
+    InvalidFilenameError
+)
+from behave.model_type import FileLocation
+from behave.model import Feature, Rule, ScenarioOutline, Scenario
 from behave.textutil import ensure_stream_with_encoder
-# LAZY: from behave.step_registry import setup_step_decorators
+# USE-LAZY-IMPORT: from behave.step_registry import setup_step_decorators
 
 
 # -----------------------------------------------------------------------------
@@ -45,10 +55,6 @@ class FileLocationParser(object):
 # -----------------------------------------------------------------------------
 # CLASSES:
 # -----------------------------------------------------------------------------
-from collections import OrderedDict
-from .model import Feature, Rule, ScenarioOutline, Scenario
-
-
 class FeatureLineDatabase(object):
     """Helper class that supports select-by-location mechanism (FileLocation)
     within a feature file by storing the feature line numbers for each entity.
@@ -70,7 +76,8 @@ class FeatureLineDatabase(object):
     def select_run_item_by_line(self, line):
         """Select one run-items by using the line number.
 
-        * Exact match returns run-time entity (Feature, Rule, ScenarioOutline, Scenario)
+        * Exact match returns run-time entity:
+          Feature, Rule, ScenarioOutline, Scenario
         * Any other line in between uses the predecessor entity
 
         :param line: Line number in Feature file (as int)
@@ -84,8 +91,7 @@ class FeatureLineDatabase(object):
                 self._line_entities = list(self.data.values())
 
             pos = bisect(self._line_numbers, line) - 1
-            if pos < 0:
-                pos = 0
+            pos = max(0, pos)
             run_item = self._line_entities[pos]
         return run_item
 
@@ -183,9 +189,12 @@ class FeatureScenarioLocationCollector(object):
             self.filename = location.filename
             # if self.feature and False:
             #     self.filename = self.feature.filename
+
         # -- NORMAL CASE:
-        assert self.filename == location.filename, \
-            "%s <=> %s" % (self.filename, location.filename)
+        if not (self.filename == location.filename):
+            raise ValueError("filename:%s <=> location.filename:%s" %
+                             (self.filename, location.filename))
+
         if location.line:
             self.scenario_lines.add(location.line)
         else:
@@ -207,8 +216,7 @@ class FeatureScenarioLocationCollector(object):
         if not scenario_lines:
             return 0    # -- Select all scenarios.
         pos = bisect(scenario_lines, line) - 1
-        if pos < 0:
-            pos = 0
+        pos = max(0, pos)
         return scenario_lines[pos]
 
     def discover_selected_scenarios(self, strict=False):
@@ -223,7 +231,7 @@ class FeatureScenarioLocationCollector(object):
         :raises InvalidFileLocationError:
             If file location is no exactly correct and strict is true.
         """
-        assert self.feature
+        require_not_none(self.feature, "self.feature")
         if not self.all_scenarios:
             self.all_scenarios = self.feature.walk_scenarios()
 
@@ -297,8 +305,7 @@ class FeatureScenarioLocationCollector1(FeatureScenarioLocationCollector):
         if not scenario_lines:
             return 0    # -- Select all scenarios.
         pos = bisect(scenario_lines, line) - 1
-        if pos < 0:
-            pos = 0
+        pos = max(0, pos)
         return scenario_lines[pos]
 
     def discover_selected_scenarios(self, strict=False):
@@ -313,7 +320,7 @@ class FeatureScenarioLocationCollector1(FeatureScenarioLocationCollector):
         :raises InvalidFileLocationError:
             If file location is no exactly correct and strict is true.
         """
-        assert self.feature
+        require_not_none(self.feature, "self.feature")
         if not self.all_scenarios:
             self.all_scenarios = self.feature.walk_scenarios()
 
@@ -356,7 +363,7 @@ class FeatureScenarioLocationCollector2(FeatureScenarioLocationCollector):
         :raises InvalidFileLocationError:
             If file location is no exactly correct and strict is true.
         """
-        assert self.feature
+        require_not_none(self.feature, "self.feature")
         if not self.all_scenarios:
             self.all_scenarios = self.feature.walk_scenarios()
 
@@ -394,10 +401,9 @@ class FeatureListParser(object):
         locations = []
         for line in text.splitlines():
             filename = line.strip()
-            if not filename:
-                continue    # SKIP: Over empty line(s).
-            elif filename.startswith('#'):
-                continue    # SKIP: Over comment line(s).
+            if not filename or filename.startswith('#'):
+                # -- SKIP: Over empty or comment line(s).
+                continue
 
             if here and not os.path.isabs(filename):
                 filename = os.path.join(here, line)
@@ -427,8 +433,9 @@ class FeatureListParser(object):
         here = os.path.dirname(filename) or "."
         # -- MAYBE BETTER:
         # contents = codecs.open(filename, "utf-8").read()
-        contents = open(filename).read()
-        return cls.parse(contents, here)
+        with open(filename) as f:
+            contents = f.read()
+            return cls.parse(contents, here)
 
 
 class PathManager(object):
@@ -477,22 +484,22 @@ def parse_features(feature_files, language=None):
     features = []
     for location in feature_files:
         if not isinstance(location, FileLocation):
-            assert isinstance(location, string_types)
+            require_type(location, string_types)
             location = FileLocation(os.path.normpath(location))
 
         if location.filename == scenario_collector.filename:
             scenario_collector.add_location(location)
             continue
-        elif scenario_collector.feature:
+        if scenario_collector.feature:
             # -- NEW FEATURE DETECTED: Add current feature.
             current_feature = scenario_collector.build_feature()
             features.append(current_feature)
             scenario_collector.clear()
 
         # -- NEW FEATURE:
-        assert isinstance(location, FileLocation)
+        require_type(location, FileLocation)
         filename = os.path.abspath(location.filename)
-        feature = parser.parse_file(filename, language=language)
+        feature = gherkin.parse_file(filename, language=language)
         if feature:
             # -- VALID FEATURE:
             # SKIP CORNER-CASE: Feature file without any feature(s).
@@ -535,7 +542,7 @@ def collect_feature_locations(paths, strict=True):
             location = FileLocationParser.parse(path)
             if not location.filename.endswith(".feature"):
                 raise InvalidFilenameError(location.filename)
-            elif location.exists():
+            if location.exists():
                 locations.append(location)
             elif strict:
                 raise FileNotFoundError(path)
@@ -562,18 +569,21 @@ def exec_file(filename, globals_=None, locals_=None):
 
 def load_step_modules(step_paths):
     """Load step modules with step definitions from step_paths directories."""
-    from behave import matchers
+    # pylint: disable=import-outside-toplevel
+    from behave.api.step_matchers import use_step_matcher, use_default_step_matcher
+    from behave.api.step_matchers import step_matcher
+    from behave.matchers import use_current_step_matcher_as_default
     from behave.step_registry import setup_step_decorators
     step_globals = {
-        "use_step_matcher": matchers.use_step_matcher,
-        "step_matcher":     matchers.step_matcher, # -- DEPRECATING
+        "use_step_matcher": use_step_matcher,
+        "step_matcher":     step_matcher, # -- DEPRECATING
     }
     setup_step_decorators(step_globals)
 
     # -- Allow steps to import other stuff from the steps dir
     # NOTE: Default matcher can be overridden in "environment.py" hook.
     with PathManager(step_paths):
-        default_matcher = matchers.current_matcher
+        use_current_step_matcher_as_default()
         for path in step_paths:
             for name in sorted(os.listdir(path)):
                 if name.endswith(".py"):
@@ -584,7 +594,7 @@ def load_step_modules(step_paths):
                     # try:
                     step_module_globals = step_globals.copy()
                     exec_file(os.path.join(path, name), step_module_globals)
-                    matchers.current_matcher = default_matcher
+                use_default_step_matcher()
 
 
 def make_undefined_step_snippet(step, language=None):
@@ -596,19 +606,26 @@ def make_undefined_step_snippet(step, language=None):
     """
     if isinstance(step, string_types):
         step_text = step
-        steps = parser.parse_steps(step_text, language=language)
+        steps = gherkin.parse_steps(step_text, language=language)
         step = steps[0]
-        assert step, "ParseError: %s" % step_text
+        require_not_none(step, message=("ParseError: %s" % step_text))
 
     prefix = u"u"
     single_quote = "'"
     if single_quote in step.name:
         step.name = step.name.replace(single_quote, r"\'")
 
-    schema = u"@%s(%s'%s')\ndef step_impl(context):\n"
-    schema += u"    raise NotImplementedError(%s'STEP: %s %s')\n\n"
-    snippet = schema % (step.step_type, prefix, step.name,
-                        prefix, step.step_type.title(), step.name)
+
+    snippet_template = u"""\
+@{step_type}({prefix}'{step_pattern}')
+def step_impl(context):
+    raise StepNotImplementedError({prefix}'{step_type_titled} {step_pattern}')
+
+"""
+    snippet = snippet_template.format(step_type=step.step_type,
+                                      step_type_titled=step.step_type.title(),
+                                      step_pattern=step.name,
+                                      prefix=prefix)
     return snippet
 
 
@@ -648,28 +665,35 @@ def print_undefined_step_snippets(undefined_steps, stream=None, colored=True):
     if not stream:
         stream = sys.stderr
 
-    msg = u"\nYou can implement step definitions for undefined steps with "
-    msg += u"these snippets:\n\n"
-    msg += u"\n".join(make_undefined_step_snippets(undefined_steps))
+    step_snippets = u"\n".join(make_undefined_step_snippets(undefined_steps))
+    message = u"""
+You can implement step definitions for undefined steps with these snippets:
+
+from behave.api.pending_step import StepNotImplementedError
+{undefined_steps}
+""".format(undefined_steps=step_snippets)
 
     if colored:
         # -- OOPS: Unclear if stream supports ANSI coloring.
+        # pylint: disable=import-outside-toplevel
         from behave.formatter.ansi_escapes import escapes
-        msg = escapes['undefined'] + msg + escapes['reset']
+        message = escapes["undefined"] + message + escapes["reset"]
 
     stream = ensure_stream_with_encoder(stream)
-    stream.write(msg)
+    stream.write(message)
     stream.flush()
 
+
 def reset_runtime():
-    """Reset runtime environment.
+    """
+    Reset runtime environment.
     Best effort to reset module data to initial state.
     """
+    # pylint: disable=import-outside-toplevel
     from behave import step_registry
-    from behave import matchers
-    # -- RESET 1: behave.step_registry
+    from behave.matchers import get_step_matcher_factory
+    # -- RESET STEP 1: behave.step_registry
     step_registry.registry = step_registry.StepRegistry()
     step_registry.setup_step_decorators(None, step_registry.registry)
-    # -- RESET 2: behave.matchers
-    matchers.ParseMatcher.custom_types = {}
-    matchers.current_matcher = matchers.ParseMatcher
+    # -- RESET STEP 2: behave.matchers
+    get_step_matcher_factory().reset()

@@ -63,30 +63,35 @@ Best sources are:
 * JUnit XML (`ant spec 1`_, `ant spec 2`_)
 
 
-.. _`JUnit XML`:  http://junitpdfreport.sourceforge.net/managedcontent/PdfTranslation
+.. _`JUnit XML`:  https://junitpdfreport.sourceforge.net/managedcontent/PdfTranslation
 .. _`ant spec 1`: https://github.com/windyroad/JUnit-Schema
-.. _`ant spec 2`: http://svn.apache.org/repos/asf/ant/core/trunk/src/main/org/apache/tools/ant/taskdefs/optional/junit/XMLJUnitResultFormatter.java
+.. _`ant spec 2`: https://svn.apache.org/repos/asf/ant/core/trunk/src/main/org/apache/tools/ant/taskdefs/optional/junit/XMLJUnitResultFormatter.java
 """
 # pylint: enable=line-too-long
 
 from __future__ import absolute_import
 import os.path
 import codecs
+import re
+import sys
 from xml.etree import ElementTree
 from datetime import datetime
 from behave.reporter.base import Reporter
 from behave.model import Rule, Scenario, ScenarioOutline, Step
-from behave.model_core import Status
+from behave.model_type import Status
 from behave.formatter import ansi_escapes
 from behave.model_describe import ModelDescriptor
+from behave.summary import SummaryCollector
 from behave.textutil import indent, make_indentation, text as _text
 from behave.userdata import UserDataNamespace
 import six
+
 if six.PY2:
     # -- USE: Python3 backport for better unicode compatibility.
     import traceback2 as traceback
 else:
     import traceback
+    unichr = chr
 
 
 def CDATA(text=None):   # pylint: disable=invalid-name
@@ -94,6 +99,42 @@ def CDATA(text=None):   # pylint: disable=invalid-name
     element = ElementTree.Element('![CDATA[')
     element.text = ansi_escapes.strip_escapes(text)
     return element
+
+def _compile_invalid_re():
+    # https://stackoverflow.com/questions/1707890/fast-way-to-filter-illegal-xml-unicode-chars-in-python
+    illegal_unichrs = [
+        (0x00, 0x08), (0x0B, 0x1F), (0x7F, 0x84), (0x86, 0x9F),
+        (0xD800, 0xDFFF), (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF),
+        (0x1FFFE, 0x1FFFF), (0x2FFFE, 0x2FFFF), (0x3FFFE, 0x3FFFF),
+        (0x4FFFE, 0x4FFFF), (0x5FFFE, 0x5FFFF), (0x6FFFE, 0x6FFFF),
+        (0x7FFFE, 0x7FFFF), (0x8FFFE, 0x8FFFF), (0x9FFFE, 0x9FFFF),
+        (0xAFFFE, 0xAFFFF), (0xBFFFE, 0xBFFFF), (0xCFFFE, 0xCFFFF),
+        (0xDFFFE, 0xDFFFF), (0xEFFFE, 0xEFFFF), (0xFFFFE, 0xFFFFF),
+        (0x10FFFE, 0x10FFFF),
+    ]
+
+    illegal_ranges = [
+        "%s-%s" % (unichr(low), unichr(high))
+        for (low, high) in illegal_unichrs
+        if low < sys.maxunicode]
+
+    return re.compile(u'[%s]' % u''.join(illegal_ranges))
+
+
+_invalid_re = _compile_invalid_re()
+
+def _escape_invalid_xml_chars(text):
+    # replace invalid chars with Unicode hex
+    return _invalid_re.subn(lambda c: u'U+{0:0=4}'.format(ord(c.group())), text)[0]
+
+
+def escape_CDATA(text):  # pylint: disable=invalid-name
+    # -- issue #510 escape text in CDATA
+    # CDATA cannot contain the string "]]>" anywhere in the XML document.
+    if not text:
+        return text
+    text = text.replace(u']]>', u']]&gt;')
+    return _escape_invalid_xml_chars(text)
 
 
 class ElementTreeWithCDATA(ElementTree.ElementTree):
@@ -114,7 +155,7 @@ if hasattr(ElementTree, '_serialize'):
                         orig=ElementTree._serialize_xml):
         if elem.tag == '![CDATA[':
             write("\n<%s%s]]>\n" % \
-                  (elem.tag, elem.text.encode(encoding, "xmlcharrefreplace")))
+                  (elem.tag, escape_CDATA(elem.text).encode(encoding, "xmlcharrefreplace")))
             return
         return orig(write, elem, encoding, qnames, namespaces)
 
@@ -123,7 +164,7 @@ if hasattr(ElementTree, '_serialize'):
                         orig=ElementTree._serialize_xml):
         if elem.tag == '![CDATA[':
             write("\n<{tag}{text}]]>\n".format(
-                tag=elem.tag, text=elem.text))
+                tag=elem.tag, text=escape_CDATA(elem.text)))
             return
         if short_empty_elements:
             # python >=3.3
@@ -180,6 +221,7 @@ class JUnitReporter(Reporter):
 
     def __init__(self, config):
         super(JUnitReporter, self).__init__(config)
+        self._summary_collector = SummaryCollector()
         self.setup_with_userdata(config.userdata)
 
     def setup_with_userdata(self, userdata):
@@ -204,6 +246,19 @@ class JUnitReporter(Reporter):
         self.show_skipped_always = config.getbool("show_skipped_always",
                                               self.show_skipped_always)
 
+    @property
+    def feature_failed_counts(self):
+        summary_counts4features = self._summary_collector.summary_counts.features
+        return summary_counts4features.get(Status.failed, 0)
+
+    @property
+    def feature_error_counts(self):
+        summary_counts4features = self._summary_collector.summary_counts.features
+        counts = 0
+        for error_status in (Status.error, Status.hook_error):
+            counts += summary_counts4features.get(error_status, 0)
+        return counts
+
     def make_feature_filename(self, feature):
         filename = None
         for path in self.config.paths:
@@ -227,6 +282,7 @@ class JUnitReporter(Reporter):
             # -- SKIP-OUTPUT: If skipped features should not be shown.
             return
 
+        self._summary_collector.visit_feature(feature)
         feature_filename = self.make_feature_filename(feature)
         classname = feature_filename
         report = FeatureReportData(feature, feature_filename)
@@ -298,6 +354,19 @@ class JUnitReporter(Reporter):
         return None
     # pylint: enable=line-too-long
 
+    @classmethod
+    def select_step_with_any_status(cls, desired_statuses, steps):
+        """
+        .. versionchanged:: 1.2.7
+        """
+        for step in steps:
+            assert isinstance(step, Step), \
+                "TYPE-MISMATCH: step.class=%s"  % step.__class__.__name__
+            if step.status in desired_statuses:
+                return step
+        # -- NOT-FOUND:
+        return None
+
     def describe_step(self, step):
         status_text = _text(step.status.name)
         if self.show_timings:
@@ -368,65 +437,46 @@ class JUnitReporter(Reporter):
         if not feature_name:
             feature_name = self.make_feature_filename(feature)
 
-        case = ElementTree.Element('testcase')
+        case = ElementTree.Element("testcase")
         case.set(u"classname", u"%s.%s" % (classname, feature_name))
         case.set(u"name", scenario.name or "")
         case.set(u"status", scenario.status.name)
         case.set(u"time", _text(round(scenario.duration, 6)))
 
         step = None
-        failing_step = None
-        if scenario.status == Status.failed:
-            for status in (Status.failed, Status.undefined):
-                step = self.select_step_with_status(status, scenario)
-                if step:
-                    break
+        failed_statuses = (Status.failed, )
+        error_statuses = (Status.error, Status.hook_error, Status.pending, Status.undefined)
+        skipped_statuses = (Status.skipped, Status.untested)
+
+        if scenario.status.is_error():
             # -- NOTE: Scenario may fail now due to hook-errors.
-            element_name = "failure"
-            if step and isinstance(step.exception, (AssertionError, type(None))):
-                # -- FAILURE: AssertionError
-                assert step.status in (Status.failed, Status.undefined)
-                report.counts_failed += 1
-            else:
-                # -- UNEXPECTED RUNTIME-ERROR:
-                report.counts_errors += 1
-                element_name = "error"
-            # -- COMMON-PART:
-            failure = ElementTree.Element(element_name)
-            if step:
-                step_text = self.describe_step(step).rstrip()
-                text = u"\nFailing step: %s\nLocation: %s\n" % \
-                       (step_text, step.location)
-                message = _text(step.exception)
-                failure.set(u'type', step.exception.__class__.__name__)
-                failure.set(u'message', message)
-                text += _text(step.error_message)
-            else:
-                # -- MAYBE: Hook failure before any step is executed.
-                failure_type = "UnknownError"
-                if scenario.exception:
-                    failure_type = scenario.exception.__class__.__name__
-                failure.set(u'type', failure_type)
-                failure.set(u'message', scenario.error_message or "")
-                traceback_lines = traceback.format_tb(scenario.exc_traceback)
-                traceback_lines.insert(0, u"Traceback:\n")
-                text = _text(u"".join(traceback_lines))
-            failure.append(CDATA(text))
+            # UNEXPECTED RUNTIME-ERROR:
+            report.counts_errors += 1
+            step = self.select_step_with_any_status(error_statuses, scenario.all_steps)
+            error = self._make_error_element_for(scenario, step)
+            case.append(error)
+        elif scenario.status.is_failure():
+            # -- NOTE: Scenario may fail due to ...
+            report.counts_failed += 1
+            step = self.select_step_with_any_status(failed_statuses, scenario.all_steps)
+            failure = self._make_failure_element_for(scenario, step)
             case.append(failure)
-        elif (scenario.status in (Status.skipped, Status.untested)
-              and self.show_skipped):
+        elif scenario.status in skipped_statuses and self.show_skipped:
             report.counts_skipped += 1
-            step = self.select_step_with_status(Status.undefined, scenario)
+            problematic_statuses = [Status.pending, Status.undefined]
+            step = self.select_step_with_any_status(problematic_statuses, scenario.all_steps)
             if step:
                 # -- UNDEFINED-STEP:
                 report.counts_failed += 1
+                message = u"Undefined Step: %s" % step.name.strip()
                 failure = ElementTree.Element(u"failure")
                 failure.set(u"type", u"undefined")
-                failure.set(u"message", (u"Undefined Step: %s" % step.name))
+                failure.set(u"message", message)
                 case.append(failure)
-            else:
-                skip = ElementTree.Element(u'skipped')
-                case.append(skip)
+
+            # -- ALWAYS ADD TO THE REPORT:
+            skip = ElementTree.Element(u'skipped')
+            case.append(skip)
 
         # Create stdout section for each test case
         stdout = ElementTree.Element(u"system-out")
@@ -451,6 +501,38 @@ class JUnitReporter(Reporter):
 
         if scenario.status != Status.skipped or self.show_skipped:
             report.testcases.append(case)
+
+    def _make_problem_description_for(self, element_name, scenario, step):
+        xml_element = ElementTree.Element(element_name)
+        if step:
+            step_text = self.describe_step(step).rstrip()
+            text = u"\nFailing step: %s\nLocation: %s\n" % \
+                   (step_text, step.location)
+            message = _text(step.exception).strip()
+            xml_element.set(u'type', step.exception.__class__.__name__)
+            xml_element.set(u'message', message)
+            text += _text(step.error_message)
+        else:
+            # -- MAYBE: Hook failure before any step is executed.
+            failure_type = "UnknownError"
+            if scenario.exception:
+                failure_type = scenario.exception.__class__.__name__
+            scenario_error_message = scenario.error_message
+            if scenario_error_message:
+                scenario_error_message = scenario_error_message.strip()
+            xml_element.set(u'type', failure_type)
+            xml_element.set(u'message', scenario_error_message or "")
+            traceback_lines = traceback.format_tb(scenario.exc_traceback)
+            traceback_lines.insert(0, u"Traceback:\n")
+            text = _text(u"".join(traceback_lines))
+        xml_element.append(CDATA(text))
+        return xml_element
+
+    def _make_failure_element_for(self, scenario, step):
+        return self._make_problem_description_for(u"failure", scenario, step)
+
+    def _make_error_element_for(self, scenario, step):
+        return self._make_problem_description_for(u"error", scenario, step)
 
     def _process_run_items_for(self, parent, report):
         for run_item in parent.run_items:
