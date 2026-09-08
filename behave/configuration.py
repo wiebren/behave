@@ -157,7 +157,8 @@ OPTIONS = [
     (("-j", "--jobs", "--parallel"),
      dict(metavar="NUMBER", dest="jobs", default=1, type=positive_number,
           help="""Number of concurrent jobs to use (default: %(default)s).
-                  Only supported by test runners that support parallel execution.
+                  With more than one job, feature files run in parallel
+                  worker processes (runner alias: "parallel").
                   """)),
 
     ((),  # -- CONFIGFILE only
@@ -808,6 +809,8 @@ class Configuration:
 
         # -- STEP: Load config-file(s) and parse command-line
         command_args = self.make_command_args(command_args, verbose=verbose)
+        # -- KEEP: Original command-line args (used by: ParallelRunner workers).
+        self.command_args = list(command_args)
         if load_config:
             load_configuration(self.defaults, verbose=self.verbose)
         parser = setup_parser()
@@ -887,7 +890,8 @@ class Configuration:
         self.more_formatters = None
         self.more_runners = None
         self.runner_aliases = {
-            "default": DEFAULT_RUNNER_CLASS_NAME
+            "default": DEFAULT_RUNNER_CLASS_NAME,
+            "parallel": "behave.runner_parallel:ParallelRunner",
         }
 
     @classmethod

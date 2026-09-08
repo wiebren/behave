@@ -35,6 +35,7 @@ Contents
    gherkin
    tag_expressions
    behave
+   parallel
    api
    fixtures
    userdata

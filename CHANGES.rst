@@ -14,6 +14,17 @@ DEPRECATIONS:
 
 * DEPRECATED: ``tag-expressions v1`` (old-style tag-expressions support is removed).
 
+ADDED:
+
+* Parallel test execution with ``--jobs N``: feature files run in worker
+  processes (multiprocessing); new built-in runner alias "parallel"
+  (class: ``behave.runner_parallel:ParallelRunner``, auto-selected when
+  ``--jobs > 1`` is used). New hooks for parallel mode:
+  ``before_parallel/after_parallel`` (parent process, once) and
+  ``before_worker/after_worker`` (once per worker process);
+  ``before_all/after_all`` are never called in parallel mode and require
+  an explicit parallel-mode counterpart hook when defined.
+
 CHANGED:
 
 * Use "use_nested_step_modules = False" now by default (merged from: v1.3.2).

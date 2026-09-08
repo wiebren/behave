@@ -14,6 +14,7 @@ from behave.exception import (
     InvalidFilenameError,
     TagExpressionError,
 )
+from behave.configuration import DEFAULT_RUNNER_CLASS_NAME
 from behave.importer import make_scoped_class_name
 from behave.parser import ParserError
 from behave.runner import Runner    # noqa: F401
@@ -108,6 +109,12 @@ def run_behave(config, runner_class=None):
     if config.runner == "help":
         print_runners(config.runner_aliases)
         return 0
+
+    # -- AUTO-SELECT PARALLEL RUNNER: When --jobs > 1 is used.
+    # An explicitly selected runner class or runner name always wins.
+    if (runner_class is None and config.jobs > 1 and not config.dry_run
+            and config.runner in (DEFAULT_RUNNER_CLASS_NAME, "default")):
+        config.runner = "parallel"
 
     # -- MAIN PART:
     runner = None

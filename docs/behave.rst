@@ -58,8 +58,9 @@ You may see the same information presented below at any time using ``behave
 
 .. option:: -j NUMBER, --jobs NUMBER, --parallel NUMBER
 
-    Number of concurrent jobs to use (default: 1). Only supported by test
-    runners that support parallel execution.
+    Number of concurrent jobs to use (default: 1). With more than one job,
+    feature files run in parallel worker processes (runner alias: "parallel").
+    See :ref:`id.parallel` for details, hooks and limitations.
 
 .. option:: -f FORMATTER, --format FORMATTER
 
@@ -421,8 +422,9 @@ Configuration File Parameters
 
 .. confval:: jobs : positive_number
 
-    Number of concurrent jobs to use (default: 1). Only supported by test
-    runners that support parallel execution.
+    Number of concurrent jobs to use (default: 1). With more than one job,
+    feature files run in parallel worker processes (runner alias: "parallel").
+    See :ref:`id.parallel` for details, hooks and limitations.
 
 .. index::
     single: configuration file parameter; default_format
