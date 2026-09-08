@@ -60,6 +60,28 @@ TAG-INHERITANCE:
 # ---------------------------------------------------------------------------
 # WORK-HORSE:
 # ---------------------------------------------------------------------------
+def has_explicit_runner(config):
+    """Check if a test runner was explicitly selected on the command-line.
+
+    HINT: "config.runner" cannot be used for this: its default value is
+    indistinguishable from an explicitly provided, same-valued option.
+    """
+    command_args = getattr(config, "command_args", None) or []
+    for arg in command_args:
+        if arg in ("-r", "--runner") or arg.startswith("--runner="):
+            return True
+        if arg.startswith("-r") and not arg.startswith("--"):
+            # -- CASE: "-rRUNNER_CLASS" (value directly after short option).
+            return True
+    return False
+
+
+def select_runner_class_name(config):
+    """Select the scoped runner class name that would be used."""
+    runner_name = config.runner
+    return config.runner_aliases.get(runner_name, runner_name)
+
+
 def run_behave(config, runner_class=None):
     """Run behave with configuration (and optional runner class).
 
@@ -113,7 +135,8 @@ def run_behave(config, runner_class=None):
     # -- AUTO-SELECT PARALLEL RUNNER: When --jobs > 1 is used.
     # An explicitly selected runner class or runner name always wins.
     if (runner_class is None and config.jobs > 1 and not config.dry_run
-            and config.runner in (DEFAULT_RUNNER_CLASS_NAME, "default")):
+            and not has_explicit_runner(config)
+            and select_runner_class_name(config) == DEFAULT_RUNNER_CLASS_NAME):
         config.runner = "parallel"
 
     # -- MAIN PART:

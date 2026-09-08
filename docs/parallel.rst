@@ -75,17 +75,44 @@ Limitations
 
 * **State is not shared between workers.** Module globals, context
   attributes and resources set up in one worker (or in the parent) do not
-  exist in the others. Workers re-read the configuration from disk;
-  runtime configuration changes made in the parent are not seen by workers.
+  exist in the others. Workers rebuild the configuration from the
+  command-line, the configuration files and the constructor parameters;
+  changes made to a configuration object after it was built (except
+  ``stage``, ``lang``, ``tags`` and ``userdata``) are not seen by workers.
 * **Formatters:** ``plain`` and the ``progress`` formatters are supported
-  (output arrives in whole-feature blocks). ``pretty`` is replaced by
-  ``plain``. ``json``, ``rerun`` and formatters bound to an ``--outfile``
-  are skipped in workers (with a warning). The JUnit reporter is fully
-  supported: workers write their independent per-feature XML files.
+  (output arrives in whole-feature blocks) and ``pretty`` is replaced by
+  ``plain``. Formatters that need the complete test-run (``json``,
+  ``rerun``, the ``steps.*`` and ``tags`` formatters) and any formatter
+  bound to an ``--outfile`` are **rejected** with a ``ConfigError``:
+  many workers cannot write one file, and silently producing no report
+  would be worse than failing. Use ``--jobs=1`` for those.
+  The JUnit reporter is fully supported: workers write their independent
+  per-feature XML files.
 * **Fail-early is best effort:** with ``--stop`` (or ``--wip``), pending
   feature files are cancelled after the first failure, but features already
   running in a worker finish.
 * The summary duration is the wall-clock time of the whole run.
+* Debugging is easier with ``--jobs=1``: a debugger cannot be used in a
+  worker process and tracebacks cross the process boundary as text.
 * Programmatic use of the parallel runner requires an importable main
   module (``if __name__ == "__main__":`` guard), because the "spawn"
   start-method re-imports ``__main__`` in each worker process.
+
+Per-worker resources
+====================
+
+Use ``context.worker_id`` (0..N-1) to give each worker its own resource,
+like a browser port, a test account or a database schema:
+
+.. code-block:: python
+
+    # -- FILE: features/environment.py
+    TEST_ACCOUNTS = ["alice", "bob", "charly", "dora"]
+
+    def before_worker(context):
+        # -- HINT: Each worker process uses its own test account.
+        context.account = TEST_ACCOUNTS[context.worker_id]
+        context.server_port = 8080 + context.worker_id
+
+    def after_worker(context):
+        release_account(context.account)

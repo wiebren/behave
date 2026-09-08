@@ -809,8 +809,11 @@ class Configuration:
 
         # -- STEP: Load config-file(s) and parse command-line
         command_args = self.make_command_args(command_args, verbose=verbose)
-        # -- KEEP: Original command-line args (used by: ParallelRunner workers).
+        # -- KEEP: How this configuration was built.
+        # HINT: ParallelRunner workers rebuild the configuration from this.
         self.command_args = list(command_args)
+        self.command_kwargs = dict(kwargs)
+        self.command_load_config = load_config
         if load_config:
             load_configuration(self.defaults, verbose=self.verbose)
         parser = setup_parser()

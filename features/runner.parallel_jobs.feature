@@ -152,3 +152,126 @@ Feature: Parallel test execution with --jobs option
     When I run "behave --jobs=1 -f plain --no-color features/alice.feature"
     Then it should pass
     And the command output should contain "HOOK: BEFORE-ALL"
+
+  @regression
+  Rule: Parallel mode behaves like sequential mode
+
+    Background: Restore the parallel-mode environment file
+      Given a file named "features/environment.py" with:
+          """
+          import logging
+
+          def before_parallel(context):
+              print("HOOK: BEFORE-PARALLEL")
+
+          def before_worker(context):
+              print("HOOK: WORKER-STARTED")
+          """
+
+    Scenario: Scenario selection by line number is preserved
+      Given a file named "features/many.feature" with:
+          """
+          Feature: Many
+            Scenario: M1
+              Given a step passes
+            Scenario: M2
+              Given a step passes
+          """
+      When I run "behave --jobs=1 -f plain --no-color features/many.feature:2 features/alice.feature"
+      Then it should pass with:
+          """
+          2 scenarios passed, 0 failed, 1 skipped
+          """
+      But note that "the parallel test run must select the same scenarios"
+      When I run "behave --jobs=2 -f plain --no-color features/many.feature:2 features/alice.feature"
+      Then it should pass with:
+          """
+          2 scenarios passed, 0 failed, 1 skipped
+          """
+
+    Scenario: A failing before_worker hook aborts the test run
+      Given a file named "features/environment.py" with:
+          """
+          def before_worker(context):
+              raise RuntimeError("XFAIL-SETUP")
+          """
+      When I run "behave --jobs=2 -f plain --no-color features/alice.feature features/bob.feature"
+      Then it should fail with:
+          """
+          0 features passed, 0 failed, 0 skipped, 2 untested
+          """
+      And the command output should contain "HOOK-ERROR in before_worker"
+
+    Scenario: A failing after_worker hook fails the test run
+      Given a file named "features/environment.py" with:
+          """
+          def after_worker(context):
+              raise RuntimeError("XFAIL-TEARDOWN")
+          """
+      When I run "behave --jobs=2 -f plain --no-color features/alice.feature features/bob.feature"
+      Then it should fail
+      And the command output should contain "2 features passed, 0 failed, 0 skipped"
+      And the command output should contain "HOOK-ERROR in after_worker"
+
+    Scenario: A formatter with an outfile is rejected instead of writing nothing
+      When I run "behave --jobs=2 -f plain -o report.txt --no-color features/alice.feature features/bob.feature"
+      Then it should fail
+      And the command output should contain:
+          """
+          ConfigError: PARALLEL: formatter "plain" with --outfile is not supported with --jobs > 1
+          """
+
+    Scenario: An aggregating formatter is rejected instead of producing partial output
+      When I run "behave --jobs=2 -f json --no-color features/alice.feature features/bob.feature"
+      Then it should fail
+      And the command output should contain:
+          """
+          ConfigError: PARALLEL: formatter "json" is not supported with --jobs > 1
+          """
+
+    Scenario: An explicitly selected runner is not replaced by the parallel runner
+      When I run "behave --jobs=4 --runner=behave.runner:Runner -f plain --no-color features/alice.feature features/bob.feature"
+      Then it should pass
+      And the command output should contain "USING RUNNER: behave.runner:Runner"
+      And the command output should not contain "HOOK: WORKER-STARTED"
+
+    Scenario: Log output of the workers is not swallowed
+      Given a file named "features/environment.py" with:
+          """
+          def before_parallel(context):
+              print("HOOK: BEFORE-PARALLEL")
+          """
+      And a file named "features/steps/log_steps.py" with:
+          """
+          import logging
+          from behave import step
+
+          @step('a step logs')
+          def step_logs(context):
+              logging.getLogger("demo").warning("LOG-FROM-WORKER")
+          """
+      And a file named "features/logging.feature" with:
+          """
+          Feature: Logging
+            Scenario: L1
+              Given a step logs
+          """
+      When I run "behave --jobs=1 -f plain --no-color --no-logcapture features/logging.feature features/alice.feature"
+      Then it should pass
+      And the command output should contain "LOG-FROM-WORKER"
+      But note that "the parallel test run must not swallow the log output"
+      When I run "behave --jobs=2 -f plain --no-color --no-logcapture features/logging.feature features/alice.feature"
+      Then it should pass
+      And the command output should contain "LOG-FROM-WORKER"
+
+    Scenario: A feature file that cannot be parsed aborts the test run
+      Given a file named "features/broken.feature" with:
+          """
+          Feature: Broken
+            Scenario: B1
+              Given a step passes
+            THIS LINE IS NOT GHERKIN
+          """
+      When I run "behave --jobs=2 -f plain --no-color features/broken.feature features/alice.feature"
+      Then it should fail
+      And the command output should contain "ParserError"

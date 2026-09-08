@@ -27,7 +27,8 @@ Feature: Runner Help
       And the command output should contain:
         """
         AVAILABLE RUNNERS:
-          default  = behave.runner:Runner
+          default   = behave.runner:Runner
+          parallel  = behave.runner_parallel:ParallelRunner
         """
 
     Scenario: Good Runner by using a Runner-Alias
@@ -55,8 +56,9 @@ Feature: Runner Help
       Then it should pass
       And the command output should contain:
         """
-        default  = behave.runner:Runner
-        some     = behave4me.good_runner:SomeRunner
+        default   = behave.runner:Runner
+        parallel  = behave.runner_parallel:ParallelRunner
+        some      = behave4me.good_runner:SomeRunner
         """
       And note that "the new runner appears in the sorted list of runners"
       But the command output should not contain "UNAVAILABLE RUNNERS"

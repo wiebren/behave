@@ -24,6 +24,8 @@ ADDED:
   ``before_worker/after_worker`` (once per worker process);
   ``before_all/after_all`` are never called in parallel mode and require
   an explicit parallel-mode counterpart hook when defined.
+  Workers provide ``context.worker_id`` and ``context.jobs``
+  (use it to select per-worker resources).
 
 CHANGED:
 
