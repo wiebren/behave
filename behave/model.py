@@ -1951,6 +1951,11 @@ class Step(BasicStatement, Replayable):
         wip_mode = scenario_has_wip_tag
 
 
+        for name, value in runner.context.items():
+            self.name = self.name.replace("<%%%s%%>" % name, str(value))
+            if self.text:
+                self.text = self.text.replace("<%%%s%%>" % name, str(value))
+
         match = runner.step_registry.find_match(self)
         if match is None:
             runner.undefined_steps.append(self)
