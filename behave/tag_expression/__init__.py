@@ -15,3 +15,10 @@ from .builder import (
     TagExpressionUtil,      # noqa: F401
     make_tag_expression,    # noqa: F401
 )
+
+# -- BACKWARD-COMPATIBLE: Tag-Expressions v1 name.
+# REASON: The JetBrains behave_runner.py helper (IntelliJ/PyCharm, still in
+# 2026.2) does "from behave.tag_expression import TagExpression" at import
+# time and crashes without it, so no test can be run from the IDE.
+# It only uses the name for an isinstance() check in its scenario filter.
+from .model import Expression as TagExpression  # noqa: F401
